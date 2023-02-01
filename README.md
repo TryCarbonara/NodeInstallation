@@ -78,6 +78,6 @@ Once all the above ports are verified, here is some information you need to prov
 * Architecture; eg: amd64
 * Instance Type, if any; eg: medium.x86. You can leave it blank if no type defined
 
-```Carbonara will provide access to visualization, as separate user accounts, for every customer```
+```Carbonara provides access to visualization, as separate user accounts, for every customer.```
 
-**Please feel free to reach out to the team on hello@trycarbonara.com or other preferrable communication means for any support required in installting the tooling and registering your node**
+**Please feel free to reach out to the team on hello@trycarbonara.com or using other preferrable communication means for any support required in configuring and registering your node**
