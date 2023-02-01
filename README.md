@@ -1,6 +1,6 @@
 Welcome to **Carbonara**. Carbonara requires certain tooling/exporters to help scrape and publish sensor & usage data
-for reporting the most accurate carbon emission.
-<br> This script will help configure the machine. The installation is compatible with Linux running on bare-metal.
+for reporting the most accurate carbon emission scores.
+<br> The installation is compatible with Linux running on bare-metal. These instructions will help configure your node(s) with Carbonara service.
 
 **Note:**
 * Carbonara uses rapl/ipmi tooling to fetch detailed system/process level power consumption metrics on bare-metal host specifically for compute/memory resources
