@@ -23,7 +23,7 @@ sudo apt install -y docker.io
 sudo mkdir /carbonara
 cd /carbonara
 ```
-Download/Clone all the files in rhe repo: `https://github.com/TryCarbonara/NodeInstallation` manually or using
+Download/Clone all the files in the repo: `https://github.com/TryCarbonara/NodeInstallation` manually or using
 ```sh
 git clone https://github.com/TryCarbonara/NodeInstallation
 ```
