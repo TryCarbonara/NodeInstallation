@@ -1,4 +1,4 @@
-Welcome to Carbonara. Carbonara requires certain tooling/exporters to help scrape and publish sensor & usage data
+Welcome to **Carbonara**. Carbonara requires certain tooling/exporters to help scrape and publish sensor & usage data
 for reporting the most accurate carbon emission.
 <br> This script will help configure the machine. The installation is compatible with Linux running on bare-metal.
 
@@ -26,7 +26,9 @@ cd /carbonara
 Download/Clone all the files in rhe repo: `https://github.com/TryCarbonara/NodeInstallation` manually or using
 ```sh
 git clone https://github.com/TryCarbonara/NodeInstallation
+cd NodeInstallation
 ```
+
 Note: 
 * Please use `sudo` to run all the commands
 
@@ -44,7 +46,7 @@ Validate using `curl localhost:8080/metrics`
 ### Note: Carbonara needs node_exporter to get node level usage data
 Ref: https://github.com/prometheus/node_exporter
 ```sh
-sudo chmod +x node_exporter_install.shv
+sudo chmod +x node_exporter_install.sh
 ./node_exporter_install.sh
 ```
 
@@ -54,7 +56,7 @@ Validate using `curl localhost:9100/metrics`
 ### Note: Carbonara needs process_exporter to get process level usage data
 Ref: https://github.com/ncabatoff/process-exporter
 ```sh
-sudo chmod +x process_exporter_install.shv
+sudo chmod +x process_exporter_install.sh
 ./process_exporter_install.sh
 ```
 
@@ -64,7 +66,7 @@ Validate using `curl localhost:9256/metrics`
 ### Note: Carbonara needs ipmi_exporter to get process level usage data
 Ref: https://github.com/prometheus-community/ipmi_exporter
 ```sh
-sudo chmod +x ipmi_exporter_install.shv
+sudo chmod +x ipmi_exporter_install.sh
 ./ipmi_exporter_install.sh
 ```
 
