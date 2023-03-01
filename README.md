@@ -10,7 +10,7 @@ for reporting the most accurate carbon emission data.
 
 # Before you begin
 In order to register your machine with Carbonara and ensure that the required tooling is configured for making the data available:
-* Docker ([Engine](https://helm.sh/docs/intro/install/)) installed
+* Docker ([Engine](https://www.docker.com/)) installed
 ```sh
 echo "Installing Docker Enginer ..."
 sudo apt install -y docker.io
