@@ -1,4 +1,4 @@
-# Carbonara Inc
+# Getting Started
 
 Welcome to **Carbonara**! Carbonara is the carbon data platform empowering software engineers and IT teams deliver real climate outcomes. We are still in closed Beta. If you have feedback, please reach out to us via email or slack. \
 Carbonara requires certain exporters to help scrape and publish sensor & usage data for reporting the most accurate carbon emission data. The installation is compatible with Linux running on bare-metal. These instructions will help configure your node(s) with Carbonara service.
