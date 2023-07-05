@@ -1,0 +1,14 @@
+[Unit]
+Description=IPMI Exporter
+After=network.target
+
+[Service]
+User=root
+Group=root
+Type=simple
+EnvironmentFile=/etc/sysconfig/dcgm_exporter
+ExecStart=/usr/bin/dcgm-exporter $OPTIONS
+
+[Install]
+WantedBy=multi-user.target
+                                                                                                                                                                                                                                                                                                                                                                

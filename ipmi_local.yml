@@ -1,0 +1,31 @@
+# Configuration file for ipmi_exporter
+
+# This is an example config for scraping the local host.
+# In most cases, this should work without using a config file at all.
+modules:
+        default:
+                privilege: "admin"
+                # Available collectors are bmc, ipmi, chassis, dcmi, sel, and sm-lan-mode
+                collectors:
+                - bmc
+                - ipmi
+                - dcmi
+                - chassis
+                - sel
+                collector_cmd:
+                  bmc: sudo
+                  ipmi: sudo
+                  dcmi: sudo
+                  chassis: sudo
+                  sel: sudo
+                custom_args:
+                  bmc:
+                  - "bmc-info"
+                  ipmi:
+                  - "ipmimonitoring"
+                  dcmi:
+                  - "ipmi-dcmi"
+                  chassis:
+                  - "ipmi-chassis"
+                  sel:
+                  - "ipmi-sel"
