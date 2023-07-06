@@ -1,0 +1,165 @@
+- name: Check if GPU setup is required
+  command: nvidia-smi
+  register: gpu_setup_required
+  ignore_errors: true
+  when: gvalue | default(false) | bool
+
+- name: Installing Nvidia Driver
+  block:
+    - name: Install Drivers Common
+      apt:
+        name: ubuntu-drivers-common
+        update_cache: yes
+    - name: Upgrade packages
+      apt:
+        upgrade: yes
+    - name: Install SMI latest driver
+      apt:
+        name: nvidia-driver-530
+        update_cache: yes
+    - name: Reboot the system
+      reboot:
+        reboot_timeout: 300
+  when: gpu_setup_required.rc != 0
+
+- name: Print GPU setup header
+  shell: |
+    lspci | grep -E 'VGA|Display ' | cut -d" " -f 1 | xargs -i lspci -v -s {}
+  when: gpu_setup_required.rc == 0
+
+- name: Get Ubuntu OS version
+  block:
+    - name: Set Ubuntu OS version
+      set_fact:
+        ubuntu_os_version: "ubuntu{{ ansible_distribution_version | regex_replace('\\.', '') }}"
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Print Ubuntu OS version
+      debug:
+        var: ubuntu_os_version
+
+- name: Get Architecture
+  block:
+    - name: Set Architecture
+      set_fact:
+        architecture: "{{ ansible_architecture }}"
+    
+    - name: Print Architecture
+      debug:
+        var: architecture
+
+- name: Install DCGM GPU Manager
+  block:
+    - name: Download CUDA repository GPG key
+      get_url:
+        url: https://developer.download.nvidia.com/compute/cuda/repos/{{ ubuntu_os_version }}/{{ architecture }}/cuda-keyring_1.0-1_all.deb
+        dest: /carbonara/cuda-keyring_1.0-1_all.deb
+      changed_when: false
+
+    - name: Install cuda-keyring package
+      become: true
+      command: dpkg -i cuda-keyring_1.0-1_all.deb
+      args:
+        chdir: /carbonara
+
+    - name: Add CUDA repository
+      shell: |
+        add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/{{ ubuntu_os_version }}/{{ architecture }}/ /"
+      ignore_errors: true
+  when: gpu_setup_required.rc == 0
+
+- name: Set up DCGM GPU Manager and Exporter
+  block:
+    - name: Install DCGM GPU Manager dependencies
+      apt:
+        name: datacenter-gpu-manager
+        update_cache: yes
+
+    - name: Set up DCGM Exporter directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - /etc/sysconfig
+        - /etc/dcgm-exporter
+
+    - name: Download DCGM Exporter binary
+      get_url:
+        url: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm-exporter
+        dest: /usr/bin/dcgm-exporter
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy DCGM Exporter service file
+      get_url:
+        url: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm_exporter.service
+        dest: /etc/systemd/system/dcgm_exporter.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create DCGM Exporter sysconfig file
+      lineinfile:
+        path: /etc/sysconfig/dcgm_exporter
+        line: 'OPTIONS="--address=:{{ dvalue }}"'
+        create: yes
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Download DCGM Exporter configuration files
+      get_url:
+        url: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      loop:
+        - { src: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/default-counters.csv, dest: /etc/dcgm-exporter/default-counters.csv }
+        - { src: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcp-metrics-included.csv, dest: /etc/dcgm-exporter/dcp-metrics-included.csv }
+
+    - name: Enable and start DCGM Exporter service
+      service:
+        name: dcgm_exporter
+        state: started
+        enabled: yes
+
+  when: gpu_setup_required.rc == 0
+
+- name: SMI GPU Exporter Setup
+  block:
+    - name: Download SMI GPU Exporter binary
+      get_url:
+        url: "https://github.com/utkuozdemir/nvidia_gpu_exporter/releases/download/v{{ smi_gpu_exporter_version }}/nvidia_gpu_exporter_{{ smi_gpu_exporter_version }}_linux_x86_64.tar.gz"
+        dest: /carbonara/nvidia_gpu_exporter.tar.gz
+        mode: '0644'
+
+    - name: Extract SMI GPU Exporter binary
+      unarchive:
+        src: /carbonara/nvidia_gpu_exporter.tar.gz
+        dest: /usr/bin/
+        remote_src: yes
+        extra_opts: "--strip-components=1"
+        creates: /usr/bin/nvidia_gpu_exporter
+
+    - name: Backup existing nvidia_gpu_exporter.service file
+      command: cp /etc/systemd/system/nvidia_gpu_exporter.service /etc/systemd/system/nvidia_gpu_exporter.service.backup
+      args:
+        creates: /etc/systemd/system/nvidia_gpu_exporter.service.backup
+      ignore_errors: true
+
+    - name: Download nvidia_gpu_exporter.service file
+      get_url:
+        url: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/smi-gpu-exporter/nvidia_gpu_exporter.service
+        dest: /etc/systemd/system/nvidia_gpu_exporter.service
+        mode: '0644'
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start nvidia_gpu_exporter service
+      service:
+        name: nvidia_gpu_exporter
+        state: started
+        enabled: yes
+
+  when: gpu_setup_required.rc == 0

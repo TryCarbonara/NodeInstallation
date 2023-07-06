@@ -1,0 +1,67 @@
+- name: Download Node Exporter binary
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: /carbonara/node_exporter.tar.gz
+    mode: '0644'
+
+- name: Extract Node Exporter binary
+  unarchive:
+    src: /carbonara/node_exporter.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+    extra_opts: "--strip-components=1"
+    creates: /usr/local/bin/node_exporter
+
+- name: Set ownership for Node Exporter binary
+  file:
+    path: /usr/local/bin/node_exporter
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Backup existing node_exporter.service file
+  command: cp /etc/systemd/system/node_exporter.service /etc/systemd/system/node_exporter.service.backup
+  args:
+    creates: /etc/systemd/system/node_exporter.service.backup
+  ignore_errors: true
+
+- name: Backup existing node_exporter sysconfig file
+  command: cp /etc/sysconfig/node_exporter /etc/sysconfig/node_exporter.backup
+  args:
+    creates: /etc/sysconfig/node_exporter.backup
+  ignore_errors: true
+
+- name: Download node_exporter.service file
+  get_url:
+    url: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.service
+    dest: /etc/systemd/system/node_exporter.service
+    mode: '0644'
+
+- name: Create /etc/sysconfig directory
+  file:
+    path: /etc/sysconfig
+    state: directory
+    mode: "0777"
+
+- name: Create node_exporter sysconfig file
+  file:
+    path: /etc/sysconfig/node_exporter
+    state: touch
+    mode: '0644'
+  register: sysconfig_result
+
+- name: Configure node_exporter sysconfig file
+  lineinfile:
+    path: /etc/sysconfig/node_exporter
+    line: 'OPTIONS="--collector.textfile.directory /var/lib/node_exporter/textfile_collector --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.diskstats.ignored-devices=^(ram|loop|fd)\d+$ --web.listen-address=:{{ nvalue }}"'
+  when: sysconfig_result is changed
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Restart and enable node_exporter service
+  service:
+    name: node_exporter
+    state: restarted
+    enabled: yes

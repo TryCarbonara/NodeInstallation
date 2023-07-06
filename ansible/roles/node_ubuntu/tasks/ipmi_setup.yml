@@ -1,0 +1,83 @@
+- name: Load IPMI kernel modules
+  shell: |
+    modprobe ipmi_devintf || true && modprobe ipmi_si || true
+
+- name: Check if IPMI is available
+  command: ls /dev/ipmi*
+  changed_when: false
+  register: ipmi_check
+  ignore_errors: true
+
+- name: Install FreeIPMI tool suite
+  apt:
+    name: freeipmi-tools
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+    install_recommends: no
+  when: ipmi_check.rc == 0
+
+- name: Download and extract IPMI Exporter
+  become: true
+  shell: |
+    curl -fsSL https://github.com/prometheus-community/ipmi_exporter/releases/download/v1.6.1/ipmi_exporter-1.6.1.linux-amd64.tar.gz |
+    tar -zxvf - -C /usr/local/bin --strip-components=1 ipmi_exporter-1.6.1.linux-amd64/ipmi_exporter
+    chown root:root /usr/local/bin/ipmi_exporter
+  when: ipmi_check.rc == 0
+
+- name: Back up existing ipmi_exporter.service
+  become: true
+  shell: cp /etc/systemd/system/ipmi_exporter.service /etc/systemd/system/ipmi_exporter.service.backup
+  args:
+    creates: /etc/systemd/system/ipmi_exporter.service.backup
+  when: ipmi_check.rc == 0 and ansible.file.exists("/etc/systemd/system/ipmi_exporter.service")
+
+- name: Back up existing ipmi_exporter sysconfig
+  become: true
+  shell: cp /etc/sysconfig/ipmi_exporter /etc/sysconfig/ipmi_exporter.backup
+  args:
+    creates: /etc/sysconfig/ipmi_exporter.backup
+  when: ipmi_check.rc == 0 and ansible.file.exists("/etc/sysconfig/ipmi_exporter")
+
+- name: Copy ipmi_exporter.service
+  become: true
+  copy:
+    src: ipmi_exporter.service
+    dest: /etc/systemd/system/ipmi_exporter.service
+    mode: '0644'
+  when: ipmi_check.rc == 0
+
+- name: Create ipmi_exporter sysconfig
+  become: true
+  copy:
+    content: 'OPTIONS="--config.file=/carbonara/ipmi_local.yml --web.listen-address=:{{ ivalue }}"'
+    dest: /etc/sysconfig/ipmi_exporter
+    mode: '0644'
+  when: ipmi_check.rc == 0
+
+- name: Download ipmi_local.yml
+  become: true
+  copy:
+    src: ipmi_local.yml
+    dest: /carbonara/ipmi_local.yml
+    mode: '0644'
+  when: ipmi_check.rc == 0
+
+- name: Reload systemd
+  become: true
+  systemd:
+    daemon_reload: yes
+  when: ipmi_check.rc == 0
+
+- name: Restart and enable ipmi_exporter
+  become: true
+  service:
+    name: ipmi_exporter
+    state: restarted
+    enabled: yes
+  when: ipmi_check.rc == 0
+
+- name: Enable RAPL module if IPMI is not available
+  become: true
+  shell: modprobe intel_rapl_common || true
+  when: ipmi_check.rc != 0

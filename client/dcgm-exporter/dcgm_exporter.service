@@ -1,5 +1,5 @@
 [Unit]
-Description=IPMI Exporter
+Description=DCGM Exporter
 After=network.target
 
 [Service]

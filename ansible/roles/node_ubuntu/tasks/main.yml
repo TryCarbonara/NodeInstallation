@@ -1,0 +1,52 @@
+---
+- name: Set default values
+  set_fact:
+    nvalue: "{{ nvalue | default(9100) }}"
+    ivalue: "{{ ivalue | default(9290) }}"
+    dvalue: "{{ dvalue | default(9400) }}"
+    svalue: "{{ svalue | default(9835) }}"
+    gvalue: "{{ gvalue | default(false) }}"
+    lvalue: "{{ lvalue | default(false) }}"
+    cvalue: "{{ cvalue | default(false) }}"
+    yvalue: "{{ yvalue | default(false) }}"
+    node_exporter_version: "1.3.1"
+    smi_gpu_exporter_version: "1.1.0"
+
+- name: Create carbonara working directory
+  file:
+    path: /carbonara
+    state: directory
+    mode: "0777"
+
+- name: Change directory to /carbonara
+  shell: cd /carbonara
+
+- name: Install pre-requisites for Carbonara Setup
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - net-tools
+    - curl
+    - tar
+    - wget
+
+- name: Include playbook check
+  import_tasks: check_setup.yml
+
+- name: Include IPMI setup playbook
+  import_tasks: ipmi_setup.yml
+
+- name: Include DCGM & SMI setup playbook
+  import_tasks: gpu_setup.yml
+
+- name: Include Node Exporter setup playbook
+  import_tasks: node_setup.yml
+
+- name: Include Grafana Client (Push-based) setup playbook
+  import_tasks: grafana_client_setup.yml
+
+- name: Run apt autoremove
+  apt:
+    autoremove: yes

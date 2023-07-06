@@ -1,0 +1,16 @@
+######################
+# Carbonara Setup
+######################
+- name: Carbonara setup playbook
+  hosts: all
+  strategy: free
+  become: True
+  gather_facts: true
+  roles:
+    - node_ubuntu
+  vars_files:
+    - config.yml
+  handlers:
+    - name: apt update
+      apt:
+        update_cache: yes

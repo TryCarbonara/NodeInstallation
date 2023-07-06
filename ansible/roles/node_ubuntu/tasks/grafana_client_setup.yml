@@ -1,0 +1,129 @@
+
+- name: Create /etc/apt/keyrings/ directory
+  file:
+    path: /etc/apt/keyrings/
+    state: directory
+    mode: '0755'
+
+- name: Download & Import Grafana GPG key
+  shell: |
+    wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+  register: gpg_result
+
+- name: Configure Grafana APT repository
+  shell: |
+    echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list > /dev/null
+  notify: apt update
+  when: gpg_result is changed
+
+- name: Install Grafana Agent
+  apt:
+    name: grafana-agent
+    state: present
+    update_cache: yes
+
+- name: Backup existing grafana-agent.yaml file
+  command: cp /etc/grafana-agent.yaml /etc/grafana-agent.yaml.backup
+  args:
+    creates: /etc/grafana-agent.yaml.backup
+  ignore_errors: true
+
+- name: Backup existing grafana-agent sysconfig file
+  command: cp /etc/default/grafana-agent /etc/default/grafana-agent.backup
+  args:
+    creates: /etc/default/grafana-agent.backup
+  ignore_errors: true
+
+- name: Download agent-client.yaml file
+  get_url:
+    url: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client.yaml
+    dest: /etc/grafana-agent.yaml
+    mode: '0644'
+
+- name: Download sysconfig.grafana_agent file
+  get_url:
+    url: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/sysconfig.grafana_agent
+    dest: /etc/default/grafana-agent
+    mode: '0644'
+
+- name: Set INSTANCE variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "INSTANCE=$(curl -s ifconfig.me || hostname -I | cut -f1 -d' ')"
+  when: evalue is not defined
+
+- name: Set custom evalue in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "INSTANCE={{ evalue }}"
+  when: evalue is defined
+
+- name: Set PROVIDER variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "PROVIDER={{ uvalue }}"
+  when: uvalue is defined
+
+- name: Set HOSTNAME variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "HOSTNAME={{ inventory_hostname }}"
+  when: inventory_hostname is defined
+
+- name: Set REMOTE_ENDPOINT variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "REMOTE_ENDPOINT={{ rvalue }}"
+  when: rvalue is defined
+
+- name: Set REMOTE_PORT variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "REMOTE_PORT={{ tvalue }}"
+  when: tvalue is defined
+
+- name: Set AUTH_UNAME variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "AUTH_UNAME={{ uvalue }}"
+  when: uvalue is defined
+
+- name: Set AUTH_PWD variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "AUTH_PWD={{ pvalue }}"
+  when: pvalue is defined
+
+- name: Set NODE_PORT variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "NODE_PORT={{ nvalue }}"
+  when: nvalue is defined
+
+- name: Set IPMI_PORT variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "IPMI_PORT={{ ivalue }}"
+  when: ivalue is defined
+
+- name: Set DCGM_PORT variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "DCGM_PORT={{ dvalue }}"
+  when: dvalue is defined
+
+- name: Set SMI_PORT variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "SMI_PORT={{ svalue }}"
+  when: svalue is defined
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Restart and enable grafana-agent service
+  service:
+    name: grafana-agent
+    state: restarted
+    enabled: yes
