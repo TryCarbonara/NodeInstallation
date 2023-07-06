@@ -66,6 +66,7 @@
       shell: |
         add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/{{ ubuntu_os_version }}/{{ architecture }}/ /"
       ignore_errors: true
+      changed_when: true
   when: gpu_setup_required.rc == 0
 
 - name: Set up DCGM GPU Manager and Exporter
@@ -137,8 +138,6 @@
         src: /carbonara/nvidia_gpu_exporter.tar.gz
         dest: /usr/bin/
         remote_src: yes
-        extra_opts: "--strip-components=1"
-        creates: /usr/bin/nvidia_gpu_exporter
 
     - name: Backup existing nvidia_gpu_exporter.service file
       command: cp /etc/systemd/system/nvidia_gpu_exporter.service /etc/systemd/system/nvidia_gpu_exporter.service.backup

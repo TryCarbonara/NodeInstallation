@@ -49,14 +49,8 @@
 - name: Set INSTANCE variable in grafana-agent sysconfig file
   lineinfile:
     path: /etc/default/grafana-agent
-    line: "INSTANCE=$(curl -s ifconfig.me || hostname -I | cut -f1 -d' ')"
-  when: evalue is not defined
-
-- name: Set custom evalue in grafana-agent sysconfig file
-  lineinfile:
-    path: /etc/default/grafana-agent
-    line: "INSTANCE={{ evalue }}"
-  when: evalue is defined
+    line: "INSTANCE={{ inventory_hostname }}"
+  when: inventory_hostname is defined
 
 - name: Set PROVIDER variable in grafana-agent sysconfig file
   lineinfile:
@@ -67,8 +61,8 @@
 - name: Set HOSTNAME variable in grafana-agent sysconfig file
   lineinfile:
     path: /etc/default/grafana-agent
-    line: "HOSTNAME={{ inventory_hostname }}"
-  when: inventory_hostname is defined
+    line: "HOSTNAME={{ ansible_hostname }}"
+  when: ansible_hostname is defined
 
 - name: Set REMOTE_ENDPOINT variable in grafana-agent sysconfig file
   lineinfile:
