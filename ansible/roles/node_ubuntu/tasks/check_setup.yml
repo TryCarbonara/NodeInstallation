@@ -1,9 +1,5 @@
 - name: Check if node-exporter port is listening
-  wait_for:
-    port: "{{ nvalue }}"
-    delay: 2
-    timeout: 2
-    msg: "Timeout waiting for node-exporter port to respond"
+  shell: netstat -tunlp | grep ":{{ nvalue }} " | sed -e 's/.*\///'
   register: node_port_check
   ignore_errors: true
 
@@ -12,24 +8,16 @@
     msg: "Node Exporter Port ... {{ 'Not In Use' if node_port_check.failed == true else 'In Use' }}"
 
 - name: Check if ipmi-exporter port is listening
-  wait_for:
-    port: "{{ ivalue }}"
-    delay: 2
-    timeout: 2
-    msg: "Timeout waiting for ipmi-exporter port to respond"
+  shell: netstat -tunlp | grep ":{{ ivalue }} " | sed -e 's/.*\///'
   register: ipmi_port_check
   ignore_errors: true
 
 - name: Print ipmi-exporter port status
   debug:
-    msg: "IPMI Exporter Port ... {{ 'Not In Use' if node_port_check.failed == true else 'In Use' }}"
+    msg: "IPMI Exporter Port ... {{ 'Not In Use' if ipmi_port_check.failed == true else 'In Use' }}"
 
 - name: Check if dcgm-exporter port is listening
-  wait_for:
-    port: "{{ dvalue }}"
-    delay: 2
-    timeout: 2
-    msg: "Timeout waiting for dcgm-exporter port to respond"
+  shell: netstat -tunlp | grep ":{{ dvalue }} " | sed -e 's/.*\///'
   register: dcgm_port_check
   ignore_errors: true
   when: gvalue == true
@@ -40,16 +28,12 @@
   when: gvalue == true
 
 - name: Check if smi-gpu-exporter port is listening
-  wait_for:
-    port: "{{ svalue }}"
-    delay: 2
-    timeout: 2
-    msg: "Timeout waiting for smi-gpu-exporter port to respond"
+  shell: netstat -tunlp | grep ":{{ svalue }} " | sed -e 's/.*\///'
   register: smi_gpu_port_check
   ignore_errors: true
   when: gvalue == true
 
 - name: Print smi-gpu-exporter port status
   debug:
-    msg: "SMI GPU Exporter Port ... {{ 'Not In Use' if dcgm_port_check.failed == true else 'In Use' }}"
+    msg: "SMI GPU Exporter Port ... {{ 'Not In Use' if smi_gpu_port_check.failed == true else 'In Use' }}"
   when: gvalue == true

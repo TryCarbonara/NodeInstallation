@@ -271,6 +271,15 @@ else
   echo " Success"
   fi
 
+  echo -n "Checking if port is open to use (smi-gpu-exporter) ..."
+  s_inuse=$((echo >/dev/tcp/localhost/$svalue) &>/dev/null && echo "open" || echo "close")
+  if [ "$s_inuse" == "open" ] ; then
+    echo " Port already in use" >&2
+    exit 1
+  else
+  echo " Success"
+  fi
+
   echo -e "\n"
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   echo "@     Setting Carbonara Working Directory as '/carbonara'     @"

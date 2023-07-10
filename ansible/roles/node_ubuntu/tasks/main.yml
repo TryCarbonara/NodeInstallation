@@ -37,12 +37,15 @@
 
 - name: Include IPMI setup playbook
   import_tasks: ipmi_setup.yml
+  where: ipmi_port_check.failed == true
 
 - name: Include DCGM & SMI setup playbook
   import_tasks: gpu_setup.yml
+  where: dcgm_port_check.failed == true && smi-gpu-exporter.failed == true
 
 - name: Include Node Exporter setup playbook
   import_tasks: node_setup.yml
+  where: node_port_check.failed == true
 
 - name: Include Grafana Client (Push-based) setup playbook
   import_tasks: grafana_client_setup.yml
