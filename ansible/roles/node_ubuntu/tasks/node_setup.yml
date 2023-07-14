@@ -53,7 +53,7 @@
 - name: Configure node_exporter sysconfig file
   lineinfile:
     path: /etc/sysconfig/node_exporter
-    line: 'OPTIONS="--collector.textfile.directory /var/lib/node_exporter/textfile_collector --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.diskstats.ignored-devices=^(ram|loop|fd)\d+$ --web.listen-address=:{{ nvalue }}"'
+    line: 'OPTIONS="--collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.diskstats.ignored-devices=^(ram|loop|fd|nfs)\d+$ --web.listen-address=:{{ nvalue }}"'
   when: sysconfig_result is changed
 
 - name: Reload systemd daemon

@@ -3,6 +3,7 @@ nvalue: 9100
 ivalue: 9290
 dvalue: 9400
 svalue: 9835
+cvalue: 8080
 gvalue: true
 rvalue: __REMOTE_ENDPINT__
 tvalue: __REMOTE_PORT__

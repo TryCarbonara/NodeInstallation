@@ -1,5 +1,10 @@
-- name: Check if node-exporter port is listening
-  shell: netstat -tunlp | grep ":{{ nvalue }} " | sed -e 's/.*\///'
+- name: Check if port {{ nvalue }} is listening
+  wait_for:
+    port: "{{ nvalue }}"
+    delay: 0
+    timeout: 3
+    state: started
+    msg: "Timeout waiting for {{ nvalue }} to respond"
   register: node_port_check
   ignore_errors: true
 
@@ -7,8 +12,13 @@
   debug:
     msg: "Node Exporter Port ... {{ 'Not In Use' if node_port_check.failed == true else 'In Use' }}"
 
-- name: Check if ipmi-exporter port is listening
-  shell: netstat -tunlp | grep ":{{ ivalue }} " | sed -e 's/.*\///'
+- name: Check if port {{ ivalue }} is listening
+  wait_for:
+    port: "{{ ivalue }}"
+    delay: 0
+    timeout: 3
+    state: started
+    msg: "Timeout waiting for {{ ivalue }} to respond"
   register: ipmi_port_check
   ignore_errors: true
 
@@ -16,24 +26,46 @@
   debug:
     msg: "IPMI Exporter Port ... {{ 'Not In Use' if ipmi_port_check.failed == true else 'In Use' }}"
 
-- name: Check if dcgm-exporter port is listening
-  shell: netstat -tunlp | grep ":{{ dvalue }} " | sed -e 's/.*\///'
+- name: Check if port {{ dvalue }} is listening
+  wait_for:
+    port: "{{ dvalue }}"
+    delay: 0
+    timeout: 3
+    state: started
+    msg: "Timeout waiting for {{ dvalue }} to respond"
   register: dcgm_port_check
   ignore_errors: true
-  when: gvalue == true
 
 - name: Print dcgm-exporter port status
   debug:
     msg: "DCGM Exporter Port ... {{ 'Not In Use' if dcgm_port_check.failed == true else 'In Use' }}"
   when: gvalue == true
 
-- name: Check if smi-gpu-exporter port is listening
-  shell: netstat -tunlp | grep ":{{ svalue }} " | sed -e 's/.*\///'
+- name: Check if port {{ svalue }} is listening
+  wait_for:
+    port: "{{ svalue }}"
+    delay: 0
+    timeout: 3
+    state: started
+    msg: "Timeout waiting for {{ svalue }} to respond"
   register: smi_gpu_port_check
   ignore_errors: true
-  when: gvalue == true
 
 - name: Print smi-gpu-exporter port status
   debug:
     msg: "SMI GPU Exporter Port ... {{ 'Not In Use' if smi_gpu_port_check.failed == true else 'In Use' }}"
   when: gvalue == true
+
+- name: Check if port {{ cvalue }} is listening
+  wait_for:
+    port: "{{ cvalue }}"
+    delay: 0
+    timeout: 3
+    state: started
+    msg: "Timeout waiting for {{ cvalue }} to respond"
+  register: cadvisor_port_check
+  ignore_errors: true
+
+- name: Print cadvisor-exporter port status
+  debug:
+    msg: "Cadvisor Exporter Port ... {{ 'Not In Use' if cadvisor_port_check.failed == true else 'In Use' }}"

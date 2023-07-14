@@ -5,12 +5,13 @@
     ivalue: "{{ ivalue | default(9290) }}"
     dvalue: "{{ dvalue | default(9400) }}"
     svalue: "{{ svalue | default(9835) }}"
+    cvalue: "{{ cvalue | default(8080) }}"
     gvalue: "{{ gvalue | default(false) }}"
     lvalue: "{{ lvalue | default(false) }}"
-    cvalue: "{{ cvalue | default(false) }}"
     yvalue: "{{ yvalue | default(false) }}"
     node_exporter_version: "1.3.1"
     smi_gpu_exporter_version: "1.1.0"
+    cadvisor_version: "v0.46.0"
 
 - name: Create carbonara working directory
   file:
@@ -37,15 +38,21 @@
 
 - name: Include IPMI setup playbook
   import_tasks: ipmi_setup.yml
-  where: ipmi_port_check.failed == true
+  when: ipmi_port_check.failed == true
 
 - name: Include DCGM & SMI setup playbook
   import_tasks: gpu_setup.yml
-  where: dcgm_port_check.failed == true && smi-gpu-exporter.failed == true
+  when:
+    - dcgm_port_check.failed == true
+    - smi_gpu_port_check.failed == true
+
+- name: Include cadvisor setup playbook
+  import_tasks: cadvisor_setup.yml
+  when: cadvisor_port_check.failed == true
 
 - name: Include Node Exporter setup playbook
   import_tasks: node_setup.yml
-  where: node_port_check.failed == true
+  when: node_port_check.failed == true
 
 - name: Include Grafana Client (Push-based) setup playbook
   import_tasks: grafana_client_setup.yml

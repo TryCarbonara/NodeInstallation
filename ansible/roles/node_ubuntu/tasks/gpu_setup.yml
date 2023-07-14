@@ -10,13 +10,16 @@
       apt:
         name: ubuntu-drivers-common
         update_cache: yes
+
     - name: Upgrade packages
       apt:
         upgrade: yes
+
     - name: Install SMI latest driver
       apt:
         name: nvidia-driver-530
         update_cache: yes
+
     - name: Reboot the system
       reboot:
         reboot_timeout: 300

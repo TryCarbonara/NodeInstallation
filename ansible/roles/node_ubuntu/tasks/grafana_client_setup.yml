@@ -39,12 +39,14 @@
     url: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client.yaml
     dest: /etc/grafana-agent.yaml
     mode: '0644'
+  changed_when: false
 
 - name: Download sysconfig.grafana_agent file
   get_url:
     url: https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/sysconfig.grafana_agent
     dest: /etc/default/grafana-agent
     mode: '0644'
+  changed_when: false
 
 - name: Set INSTANCE variable in grafana-agent sysconfig file
   lineinfile:
@@ -111,6 +113,12 @@
     path: /etc/default/grafana-agent
     line: "SMI_PORT={{ svalue }}"
   when: svalue is defined
+
+- name: Set CADVISOR_PORT variable in grafana-agent sysconfig file
+  lineinfile:
+    path: /etc/default/grafana-agent
+    line: "CADVISOR_PORT={{ cvalue }}"
+  when: cvalue is defined 
 
 - name: Reload systemd daemon
   systemd:
