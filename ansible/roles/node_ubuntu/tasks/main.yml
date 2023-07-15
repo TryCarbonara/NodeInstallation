@@ -28,10 +28,13 @@
     state: present
     update_cache: yes
   loop:
-    - net-tools
     - curl
     - tar
     - wget
+    - apt-transport-https
+    - ca-certificates
+    - gnupg-agent
+    - software-properties-common
 
 - name: Include playbook check
   import_tasks: check_setup.yml
