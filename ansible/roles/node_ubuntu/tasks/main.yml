@@ -19,6 +19,12 @@
     state: directory
     mode: "0777"
 
+- name: Create /etc/sysconfig directory for tooling config
+  file:
+    path: /etc/sysconfig
+    state: directory
+    mode: "0777"
+
 - name: Change directory to /carbonara
   shell: cd /carbonara
 

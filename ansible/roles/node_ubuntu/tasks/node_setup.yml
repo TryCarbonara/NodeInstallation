@@ -37,12 +37,6 @@
     dest: /etc/systemd/system/node_exporter.service
     mode: '0644'
 
-- name: Create /etc/sysconfig directory
-  file:
-    path: /etc/sysconfig
-    state: directory
-    mode: "0777"
-
 - name: Create node_exporter sysconfig file
   file:
     path: /etc/sysconfig/node_exporter

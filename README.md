@@ -281,7 +281,8 @@ Post reboot, please validate the generated metrics on configured ports.
 * _DCGM-exporter_: Validate using `curl -v localhost:9400/metrics` or any other assigned port
 * _smi-exporter_: Validate using `curl -v localhost:9835/metrics` or any other assigned port
 * _node-exporter_: Validate using `curl -v localhost:9100/metrics` or any other assigned port
-* _rapl-exporter_: Validate using `curl -v localhost:8080/metrics` or any other assigned port
+* _rapl-exporter_: Validate using `curl -v localhost:9256/metrics` or any other assigned port
+* _cadvisor-exporter_: Validate using `curl -v localhost:8080/metrics` or any other assigned port
 * _process-exporter_: Validate using `curl -v localhost:9256/metrics` or any other assigned port
 
 ## Post Installation

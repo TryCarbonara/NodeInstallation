@@ -23,12 +23,16 @@
     - name: Reboot the system
       reboot:
         reboot_timeout: 300
-  when: gpu_setup_required.rc != 0
+  when:
+    - gvalue | default(false) | bool
+    - gpu_setup_required.rc != 0
 
 - name: Print GPU setup header
   shell: |
     lspci | grep -E 'VGA|Display ' | cut -d" " -f 1 | xargs -i lspci -v -s {}
-  when: gpu_setup_required.rc == 0
+  when:
+    - gvalue | default(false) | bool
+    - gpu_setup_required.rc == 0
 
 - name: Get Ubuntu OS version
   block:
@@ -70,7 +74,9 @@
         add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/{{ ubuntu_os_version }}/{{ architecture }}/ /"
       ignore_errors: true
       changed_when: true
-  when: gpu_setup_required.rc == 0
+  when:
+    - gvalue | default(false) | bool
+    - gpu_setup_required.rc == 0
 
 - name: Set up DCGM GPU Manager and Exporter
   block:
@@ -126,7 +132,9 @@
         state: started
         enabled: yes
 
-  when: gpu_setup_required.rc == 0
+  when:
+    - gvalue | default(false) | bool
+    - gpu_setup_required.rc == 0
 
 - name: SMI GPU Exporter Setup
   block:
@@ -164,4 +172,6 @@
         state: started
         enabled: yes
 
-  when: gpu_setup_required.rc == 0
+  when:
+    - gvalue | default(false) | bool
+    - gpu_setup_required.rc == 0
