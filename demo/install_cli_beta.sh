@@ -120,7 +120,7 @@ docker run -d \
 --pid="host" \
 -v "/:/host:ro,rslave" \
 quay.io/prometheus/node-exporter:latest \
---path.rootfs=/host --collector.processes \
+--path.rootfs=/host --collector.processes --collector.rapl \
 --collector.systemd --collector.tcpstat --collector.cpu.info \
 --collector.diskstats.ignored-devices="^(ram|loop|fd)\\\\d+$"
 

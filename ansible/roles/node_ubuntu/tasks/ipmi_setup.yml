@@ -13,8 +13,6 @@
     name: freeipmi-tools
     state: present
     update_cache: yes
-    cache_valid_time: 3600
-    install_recommends: no
   when: ipmi_check.stat.exists
 
 - name: Download and extract IPMI Exporter
@@ -75,6 +73,6 @@
     enabled: yes
   when: ipmi_check.stat.exists
 
-- name: Enable RAPL module if IPMI is not available
-  shell: modprobe intel_rapl_common || true
+- name: Try enable RAPL module if IPMI is not available, if compatible
+  shell: modprobe intel_rapl_common || modprobe intel_rapl || true
   when: not ipmi_check.stat.exists

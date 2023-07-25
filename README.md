@@ -191,7 +191,7 @@ docker run -d \
 --pid="host" \
 -v "/:/host:ro,rslave" \
 quay.io/prometheus/node-exporter:latest \
---path.rootfs=/host --collector.processes \
+--path.rootfs=/host --collector.processes --collector.rapl \
 --collector.systemd --collector.tcpstat --collector.cpu.info \
 --collector.diskstats.ignored-devices="^(ram|loop|fd)\\\\d+$"
 # We recommend the above collectors configuration to get a complete coverage, please let us know if there is a conflict with any existing configuration on the host.
@@ -200,7 +200,7 @@ quay.io/prometheus/node-exporter:latest \
 wget https://github.com/prometheus/node_exporter/releases/download/v*/node_exporter-*.*-amd64.tar.gz
 tar xvfz node_exporter-*.*-amd64.tar.gz
 cd node_exporter-*.*-amd64
-./node_exporter --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.diskstats.ignored-devices="^(ram|loop|fd)\\\\d+$" &
+./node_exporter --collector.processes --collector.rapl --collector.systemd --collector.tcpstat --collector.cpu.info --collector.diskstats.ignored-devices="^(ram|loop|fd)\\\\d+$" &
 ```
 
 _node_exporter_ can also be configured using direct binary or [ansible](https://github.com/cloudalchemy/ansible-node-exporter)

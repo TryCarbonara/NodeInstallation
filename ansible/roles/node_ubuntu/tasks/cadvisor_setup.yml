@@ -21,7 +21,7 @@
   systemd:
     daemon_reload: yes
 
-- name: Restart and enable ipmi_exporter
+- name: Restart and enable docker
   service:
     name: docker
     state: restarted
