@@ -40,6 +40,7 @@
     detach: yes
     devices:
       - "/dev/kmsg"
+    restart_policy: "always"
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:rw"
