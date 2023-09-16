@@ -355,7 +355,7 @@ else
   echo '@   **Step 3:** Install node exporter tool, for host resource usage data   @'
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   echo "Installing Node Exporter ..."
-  sudo curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-amd64.tar.gz \
+  sudo curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz \
     | sudo tar -zxvf - -C /usr/local/bin --strip-components=1 node_exporter-1.3.1.linux-amd64/node_exporter \
     && sudo chown root:root /usr/local/bin/node_exporter
 
@@ -399,16 +399,16 @@ else
     sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client-fc.yaml -o /etc/grafana-agent.yaml && \
     sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/sysconfig.grafana_agent -o /etc/default/grafana-agent
 
-    sudo echo "INSTANCE=$(hostname -I | cut -f1 -d' ' || curl -s ifconfig.me)" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "PROVIDER=$uvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "HOSTNAME=$(hostname)" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "REMOTE_ENDPOINT=$rvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "REMOTE_PORT=$tvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "AUTH_UNAME=$uvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "AUTH_PWD=$pvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "NODE_PORT=$nvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "IPMI_PORT=$ivalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "DCGM_PORT=$dvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo sed -i "s/\${INSTANCE}/$(hostname -I | cut -f1 -d' ')/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${PROVIDER}/$uvalue/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${HOSTNAME}/$(hostname)/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${REMOTE_ENDPOINT}/$rvalue/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${REMOTE_PORT}/$tvalue/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${AUTH_UNAME}/$uvalue/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${AUTH_PWD}/$pvalue/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${NODE_PORT}/$nvalue/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${IPMI_PORT}/$ivalue/g" /etc/grafana-agent.yaml
+    sudo sed -i "s/\${DCGM_PORT}/$dvalue/g" /etc/grafana-agent.yaml
 
     sudo systemctl daemon-reload \
       && sudo systemctl restart grafana-agent \

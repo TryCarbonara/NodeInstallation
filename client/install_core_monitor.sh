@@ -111,7 +111,7 @@ sudo apt-get install -y curl tar wget sed
 
 # Download the source using wget, untar it, and rename the extracted folder to Prometheus-package.
 
-wget https://github.com/prometheus/prometheus/releases/download/v2.32.1/prometheus-2.32.1.linux-amd64.tar.gz
+wget https://github.com/prometheus/prometheus/releases/download/v2.47.0/prometheus-2.47.0.linux-amd64.tar.gz
 tar -xvf prometheus-*.linux-amd64.tar.gz
 mv prometheus-*.linux-amd64 prometheus-package
 
@@ -162,11 +162,11 @@ sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/
 sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml \
   # && sudo chown prometheus:prometheus /etc/prometheus/web.yml
 
-sed -i "s/\${PROM_INSTANCE}/$(hostname -I | cut -f1 -d' ')/g" /etc/prometheus/prometheus.yml
-sed -i "s/\${REMOTE_ENDPOINT}/$rvalue/g" /etc/prometheus/prometheus.yml
-sed -i "s/\${REMOTE_PORT}/$tvalue/g" /etc/prometheus/prometheus.yml
-sed -i "s/\${AUTH_UNAME}/$uvalue/g" /etc/prometheus/prometheus.yml
-sed -i "s/\${AUTH_PWD}/$pvalue/g" /etc/prometheus/prometheus.yml
+sudo sed -i "s/\${PROM_INSTANCE}/$(hostname -I | cut -f1 -d' ')/g" /etc/prometheus/prometheus.yml
+sudo sed -i "s/\${REMOTE_ENDPOINT}/$rvalue/g" /etc/prometheus/prometheus.yml
+sudo sed -i "s/\${REMOTE_PORT}/$tvalue/g" /etc/prometheus/prometheus.yml
+sudo sed -i "s/\${AUTH_UNAME}/$uvalue/g" /etc/prometheus/prometheus.yml
+sudo sed -i "s/\${AUTH_PWD}/$pvalue/g" /etc/prometheus/prometheus.yml
 
 sudo systemctl daemon-reload \
     && sudo systemctl start prometheus \
