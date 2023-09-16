@@ -147,10 +147,20 @@ if [ -f "/etc/systemd/system/prometheus.service" ]; then
     echo "Backing up existing prometheus.service to '/etc/systemd/system/prometheus.service.backup'"
 fi
 
+if [ -f "/etc/prometheus/web.yml" ]; then
+    sudo cp /etc/prometheus/web.yml /etc/prometheus/web.yml.backup
+    echo "Backing up existing web.yml to '/etc/prometheus/web.yml.backup'"
+    rm -rf /etc/prometheus/web.yml
+fi
+
 sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/core-prom-server/prometheus.service -o /etc/systemd/system/prometheus.service \
     && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/core-prom-server/prometheus.yml -o /etc/prometheus/prometheus.yml
 
-sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
+sudo echo 'basic_auth_users:' | sudo tee /etc/prometheus/web.yml > /dev/null \
+  && sudo echo "  $uvalue: $pvalue" | sudo tee /etc/prometheus/web.yml > /dev/null
+
+sudo chown prometheus:prometheus /etc/prometheus/web.yml \
+  && sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
 
 sed -i "s/\${PROM_INSTANCE}/$(hostname -I | cut -f1 -d' ')/g" /etc/prometheus/prometheus.yml
 sed -i "s/\${REMOTE_ENDPOINT}/$rvalue/g" /etc/prometheus/prometheus.yml
