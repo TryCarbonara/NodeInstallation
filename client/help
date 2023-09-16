@@ -1,0 +1,28 @@
+# This env file is loaded by the Granafa systemd service before starting. It adjusts
+# Grafana settings in two ways:
+# - Some of the variables are used in the systemd definition to change
+#   command line arguments
+# - Some of the variables are expanded when /etc/grafana-agent.yaml is read, but
+#   only when -config.expand-env is set.
+# The configuration file holding the agent config
+CONFIG_FILE="/etc/grafana-agent.yaml"
+
+# Command line arguments for the Grafana agent
+CUSTOM_ARGS="-server.http.address=127.0.0.1:9090 -config.expand-env -server.grpc.address=127.0.0.1:9091"
+
+# Restart on system upgrade. Default to true
+RESTART_ON_UPGRADE=true
+# INSTANCE is a single, public IP address that Carbonara uses to 
+# determine the lat/long of the host so that it can map power
+# telemetry to the corresponding electric grid.
+INSTANCE=64.156.70.153
+PROVIDER=ai2
+HOSTNAME=general-cirrascale-15.reviz.ai2.in
+REMOTE_ENDPOINT=ae511eb49025e475caef8d16a3dfbc6d-702307632.us-west-2.elb.amazonaws.com
+REMOTE_PORT=9090
+AUTH_UNAME=ai2
+AUTH_PWD=XXX
+NODE_PORT=1000
+IPMI_PORT=9290
+DCGM_PORT=1001
+CADVISOR_PORT=1006

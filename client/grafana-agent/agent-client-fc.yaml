@@ -81,33 +81,6 @@ metrics:
             - source_labels: [__name__]
               regex: 'DCGM_FI_DEV_GPU_UTIL|DCGM_FI_DEV_POWER_USAGE|DCGM_FI_PROF_PIPE_TENSOR_ACTIVE'
               action: keep
-    - name: gpu-smi-agent
-      scrape_configs:
-        - job_name: 'smi-gpu-exporter'
-          metrics_path: /metrics
-          honor_labels: true
-          honor_timestamps: false
-          static_configs:
-            # ipmi_exporter localhost port
-            - targets: ['localhost:${SMI_PORT}']
-              labels:
-                instance: '${INSTANCE}:${SMI_PORT}'
-    - name: cadvisor-agent
-      scrape_configs:
-        - job_name: 'cadvisor-exporter'
-          metrics_path: /metrics
-          honor_labels: true
-          honor_timestamps: false
-          static_configs:
-            # ipmi_exporter localhost port
-            - targets: ['localhost:${CADVISOR_PORT}']
-              labels:
-                instance: '${INSTANCE}:${CADVISOR_PORT}'
-          metric_relabel_configs:
-            # Include only the metrics you want by using regex patterns to filter them
-            - source_labels: [__name__]
-              regex: 'container_cpu_usage_seconds_total|container_fs_limit_bytes|container_fs_usage_bytes|container_memory_rss|container_network_receive_bytes_total|container_network_transmit_bytes_total|container_memory_cache|container_start_time_seconds'
-              action: keep
 
 integrations:
   agent:

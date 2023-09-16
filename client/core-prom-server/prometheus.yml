@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 30s
+  external_labels:
+    environment: '${AUTH_UNAME}-core-server'
+    prometheus_instance: '${PROM_INSTANCE}:9090'
+remote_write:
+  # Monitor-Service endpoint and port. Shared by Carbonara
+  - url: http://${REMOTE_ENDPOINT}:${REMOTE_PORT}/api/v1/write
+    basic_auth:
+      # Basic auth username. Shared by Carbonara
+      username: ${AUTH_UNAME}
+      # Basic auth password. Shared by Carbonara
+      password: ${AUTH_PWD}
+    headers:
+      tenant_id: ${AUTH_UNAME}
+    queue_config:
+      # Number of samples to buffer per shard before the client starts dropping them
+      capacity: 10000
+      # Maximum number of concurrent shards sending samples to the endpoint
+      max_shards: 10
+      # Minimum amount of concurrent shards sending samples to the endpoint
+      min_shards: 1
+      # Maximum number of samples per send
+      max_samples_per_send: 500
+      # Initial retry delay. The backoff time gets doubled for each retry
+      min_backoff: 1s
+      # Maximum retry delay
+      max_backoff: 15s
