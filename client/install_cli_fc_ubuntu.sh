@@ -248,7 +248,7 @@ else
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   sudo apt-get update
   sudo apt install -y net-tools
-  sudo apt-get install -y curl tar wget
+  sudo apt-get install -y curl tar wget sed
   sudo apt install -y figlet
   # sudo useradd --system --shell /bin/false carbonara_exporter || \
   #   echo "User already exists."

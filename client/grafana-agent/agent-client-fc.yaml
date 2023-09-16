@@ -8,7 +8,6 @@ metrics:
     external_labels:
       hostname: '${HOSTNAME}'
       provider: '${AUTH_UNAME}'
-      infrastructure_type: '${INFRA_TYPE}'
     remote_write:
       # Monitor-Service endpoint and port. Shared by Carbonara
       - url: http://${REMOTE_ENDPOINT}:${REMOTE_PORT}/api/v1/write
