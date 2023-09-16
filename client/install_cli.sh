@@ -366,7 +366,7 @@ else
       echo "Installing Nvidia Driver ..."
       sudo apt-get update && sudo apt-get install -y ubuntu-drivers-common && sudo ubuntu-drivers devices \
         && sudo apt -y upgrade \
-        && sudo apt-get install -y nvidia-driver-530
+        && sudo apt-get install -y nvidia-driver-535
         # && sudo ubuntu-drivers autoinstall
     fi
 

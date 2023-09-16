@@ -105,6 +105,10 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo '@ Install/configure Prometheus Service @'
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
+sudo apt-get update
+# sudo apt install -y net-tools
+sudo apt-get install -y curl tar wget sed
+
 # Download the source using wget, untar it, and rename the extracted folder to Prometheus-package.
 
 wget https://github.com/prometheus/prometheus/releases/download/v2.32.1/prometheus-2.32.1.linux-amd64.tar.gz
@@ -146,20 +150,29 @@ fi
 if [ -f "/etc/sysconfig/prometheus" ]; then
     sudo cp /etc/sysconfig/prometheus /etc/sysconfig/prometheus.backup
     echo "Backing up existing prometheus sysconfig to '/etc/sysconfig/prometheus.backup'"
+    rm -rf /etc/sysconfig/prometheus
 fi
 
 sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/core-prom-server/prometheus.service -o /etc/systemd/system/prometheus.service \
-    && sudo mkdir -p /etc/sysconfig \
-    && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/core-prom-server/prometheus.yml -o /etc/prometheus/prometheus.yml \
+    && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/core-prom-server/prometheus.yml -o /etc/prometheus/prometheus.yml
 
 sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
 
-sudo echo "PROM_INSTANCE=$(hostname -I | cut -f1 -d' ')" | sudo tee -a /etc/sysconfig/prometheus > /dev/null
-sudo echo "REMOTE_ENDPOINT=$rvalue" | sudo tee -a /etc/sysconfig/prometheus > /dev/null
-sudo echo "REMOTE_PORT=$tvalue" | sudo tee -a /etc/sysconfig/prometheus > /dev/null
-sudo echo "AUTH_UNAME=$uvalue" | sudo tee -a /etc/sysconfig/prometheus > /dev/null
-sudo echo "AUTH_PWD=$pvalue" | sudo tee -a /etc/sysconfig/prometheus > /dev/null
+sed -i "s/\${PROM_INSTANCE}/$(hostname -I | cut -f1 -d' ')/g" /etc/prometheus/prometheus.yml
+sed -i "s/\${REMOTE_ENDPOINT}/$rvalue" /etc/prometheus/prometheus.yml
+sed -i "s/\${REMOTE_PORT}/$tvalue" /etc/prometheus/prometheus.yml
+sed -i "s/\${AUTH_UNAME}/$uvalue" /etc/prometheus/prometheus.yml
+sed -i "s/\${AUTH_PWD}/$pvalue" /etc/prometheus/prometheus.yml
 
 sudo systemctl daemon-reload \
     && sudo systemctl start prometheus \
     && sudo systemctl enable prometheus
+
+echo -e "Cleaning not-in-use packages"
+sudo apt -y autoremove
+
+echo -e "\n"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@            You are all set to start publishing metrics to Carbonara             @"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo -e "Please make sure to whitelist (egress) endpoint=$rvalue:$tvalue, if applicable."
