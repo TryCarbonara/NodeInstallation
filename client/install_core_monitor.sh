@@ -118,8 +118,8 @@ mv prometheus-*.linux-amd64 prometheus-package
 # Create a Prometheus user, and required directories, and make Prometheus the user as the owner of those directories.
 
 sudo useradd --no-create-home --shell /bin/false prometheus
-sudo mkdir /etc/prometheus
-sudo mkdir /var/lib/prometheus
+sudo mkdir -p /etc/prometheus
+sudo mkdir -p /var/lib/prometheus
 sudo chown prometheus:prometheus /etc/prometheus
 sudo chown prometheus:prometheus /var/lib/prometheus
 

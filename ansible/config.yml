@@ -5,7 +5,7 @@ dvalue: 9400
 svalue: 9835
 cvalue: 8080
 gvalue: true
-rvalue: __REMOTE_ENDPINT__
-tvalue: __REMOTE_PORT__
-uvalue: __CARBONARA_UNAME__
-pvalue: __CARBONARA_PWD__
+rvalue: a9d1a3a7bbcbd409eb1a0782fce8d4b4-610676133.us-east-2.elb.amazonaws.com
+tvalue: 9090
+uvalue: paperspace
+pvalue: carbonara
