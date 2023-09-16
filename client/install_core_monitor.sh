@@ -147,22 +147,16 @@ if [ -f "/etc/systemd/system/prometheus.service" ]; then
     echo "Backing up existing prometheus.service to '/etc/systemd/system/prometheus.service.backup'"
 fi
 
-if [ -f "/etc/sysconfig/prometheus" ]; then
-    sudo cp /etc/sysconfig/prometheus /etc/sysconfig/prometheus.backup
-    echo "Backing up existing prometheus sysconfig to '/etc/sysconfig/prometheus.backup'"
-    rm -rf /etc/sysconfig/prometheus
-fi
-
 sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/core-prom-server/prometheus.service -o /etc/systemd/system/prometheus.service \
     && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/core-prom-server/prometheus.yml -o /etc/prometheus/prometheus.yml
 
 sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
 
 sed -i "s/\${PROM_INSTANCE}/$(hostname -I | cut -f1 -d' ')/g" /etc/prometheus/prometheus.yml
-sed -i "s/\${REMOTE_ENDPOINT}/$rvalue" /etc/prometheus/prometheus.yml
-sed -i "s/\${REMOTE_PORT}/$tvalue" /etc/prometheus/prometheus.yml
-sed -i "s/\${AUTH_UNAME}/$uvalue" /etc/prometheus/prometheus.yml
-sed -i "s/\${AUTH_PWD}/$pvalue" /etc/prometheus/prometheus.yml
+sed -i "s/\${REMOTE_ENDPOINT}/$rvalue/g" /etc/prometheus/prometheus.yml
+sed -i "s/\${REMOTE_PORT}/$tvalue/g" /etc/prometheus/prometheus.yml
+sed -i "s/\${AUTH_UNAME}/$uvalue/g" /etc/prometheus/prometheus.yml
+sed -i "s/\${AUTH_PWD}/$pvalue/g" /etc/prometheus/prometheus.yml
 
 sudo systemctl daemon-reload \
     && sudo systemctl start prometheus \
