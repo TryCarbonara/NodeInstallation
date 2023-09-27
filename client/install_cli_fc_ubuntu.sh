@@ -54,7 +54,7 @@ gvalue=false
 lvalue=false
 cvalue=false
 
-while getopts 'hn:i:u:p:r:t:d:s:e:glyc' OPTION; do
+while getopts 'hn:i:u:p:r:t:d:glc' OPTION; do
   case "$OPTION" in
     h)
       echo "script usage: $(basename $0) [<flags>]"
@@ -128,13 +128,13 @@ if [ -z "$nvalue" ] ; then
 fi
 
 if [ -z "$ivalue" ] ; then
-  echo -e  "ipmi-exporter port is picking default value: 9290."
+  echo -e "ipmi-exporter port is picking default value: 9290."
   ivalue=9290
 fi
 
 if [ "$gvalue" == true ] ; then
   if [ -z "$dvalue" ] ; then
-    echo -e  "dcgm-exporter port is picking default value: 9400."
+    echo -e "dcgm-exporter port is picking default value: 9400."
     dvalue=9400
   fi
 fi
