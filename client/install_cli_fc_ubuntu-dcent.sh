@@ -341,9 +341,6 @@ else
     echo "Skipping ..."
   fi
 
-  echo -e "Cleaning not-in-use packages"
-  sudo apt -y autoremove
-
   echo -e "\n"
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   echo "@            You are all set to start publishing metrics to Carbonara             @"
