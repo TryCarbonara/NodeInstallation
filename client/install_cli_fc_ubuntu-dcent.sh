@@ -122,11 +122,6 @@ while getopts 'hn:i:u:p:r:t:d:glc' OPTION; do
 done
 shift "$(($OPTIND -1))"
 
-if [ -z "$ivalue" ] ; then
-  echo -e "ipmi-exporter port is picking default value: 9290."
-  ivalue=9290
-fi
-
 if [ "$gvalue" == true ] ; then
   if [ -z "$dvalue" ] ; then
     echo -e "dcgm-exporter port is picking default value: 9400."
@@ -171,6 +166,20 @@ if [ "$cvalue" == true ] ; then
     fi
   fi
 
+  echo -n "Checking port (node-exporter) ..."
+  n_inuse=$((echo >/dev/tcp/localhost/$nvalue) &>/dev/null && echo "open" || echo "close")
+  if [ "$n_inuse" == "open" ] ; then
+    echo " Port in use" >&2
+  else
+    echo " Port not is use" >&2
+  fi
+  sd=$(sudo systemctl status node_exporter.service)
+  if [ $? == 0 ]; then
+    echo "Node Exporter ... Succeeded"
+  else
+    echo "Node Exporter ... Failed"
+  fi
+
   sd=$(sudo systemctl status grafana-agent.service)
   if [ $? == 0 ]; then
     echo "Grafana Agent ... Succeeded"
@@ -186,15 +195,6 @@ else
   if [ -z "$rvalue" ] || [ -z "$tvalue" ] ; then
     echo "Carbonara service endpoint and port is required. Use '-h' flag to learn more." >&2
     exit 1
-  fi
-
-  echo -n "Checking if port is open to use (ipmi-exporter) ..."
-  i_inuse=$((echo >/dev/tcp/localhost/$ivalue) &>/dev/null && echo "open" || echo "close")
-  if [ "$i_inuse" == "open" ] ; then
-    echo " Port already in use" >&2
-    exit 1
-  else
-  echo " Success"
   fi
 
   echo -n "Checking if port is open to use (dcgm-exporter) ..."
@@ -233,40 +233,6 @@ else
   # enable ipmi if underlying h/w & kernel supports it
   sudo modprobe ipmi_devintf || true
   sudo modprobe ipmi_si || true
-
-  # check if ipmi is supported
-  if ls /dev/ipmi* 1> /dev/null 2>&1; then
-    echo "Installing FreeIPMI tool suite ..."
-    sudo apt-get update && sudo apt-get install freeipmi-tools -y --no-install-recommends && sudo rm -rf /var/lib/apt/lists/*
-
-    echo "Installing IPMI Exporter ..."
-    # IPMI Exporter
-    sudo curl -fsSL https://github.com/prometheus-community/ipmi_exporter/releases/download/v1.6.1/ipmi_exporter-1.6.1.linux-amd64.tar.gz \
-    | sudo tar -zxvf - -C /usr/local/bin --strip-components=1 ipmi_exporter-1.6.1.linux-amd64/ipmi_exporter \
-    && sudo chown root:root /usr/local/bin/ipmi_exporter
-
-    if [ -f "/etc/systemd/system/ipmi_exporter.service" ]; then
-      sudo cp /etc/systemd/system/ipmi_exporter.service /etc/systemd/system/ipmi_exporter.service.backup
-      echo "Backing up existing ipmi_exporter.service to '/etc/systemd/system/ipmi_exporter.service.backup'"
-    fi
-    if [ -f "/etc/sysconfig/ipmi_exporter" ]; then
-      sudo cp /etc/sysconfig/ipmi_exporter /etc/sysconfig/ipmi_exporter.backup
-      echo "Backing up existing ipmi_exporter sysconfig to '/etc/sysconfig/ipmi_exporter.backup'"
-    fi
-
-    sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/ipmi-exporter/ipmi_exporter.service -o /etc/systemd/system/ipmi_exporter.service \
-      && sudo mkdir -p /etc/sysconfig \
-      && sudo echo 'OPTIONS="--config.file=/carbonara/ipmi_local.yml --web.listen-address=:'$ivalue'"' | sudo tee /etc/sysconfig/ipmi_exporter > /dev/null \
-      && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/ipmi_local.yml -o /carbonara/ipmi_local.yml
-
-    sudo systemctl daemon-reload \
-      && sudo systemctl restart ipmi_exporter \
-      && sudo systemctl enable ipmi_exporter
-  else
-    echo "IPMI is not available."
-    echo "Enabling RAPL module instead, for supported Architecture"
-    modprobe intel_rapl_common || true
-  fi
 
   if [ "$gvalue" == true ] ; then
     echo -e "\n"
