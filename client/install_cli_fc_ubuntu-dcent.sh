@@ -234,6 +234,18 @@ else
   sudo modprobe ipmi_devintf || true
   sudo modprobe ipmi_si || true
 
+  # check if ipmi is supported
+  if ls /dev/ipmi* 1> /dev/null 2>&1; then
+    echo "IPMI already setup"
+  else
+    echo "IPMI is not available."
+    echo "Enabling RAPL module instead, for supported Architecture"
+    modprobe intel_rapl_common || true
+    sudo systemctl daemon-reload \
+      && sudo systemctl restart node_exporter \
+      && sudo systemctl enable node_exporter
+  fi
+
   if [ "$gvalue" == true ] ; then
     echo -e "\n"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
