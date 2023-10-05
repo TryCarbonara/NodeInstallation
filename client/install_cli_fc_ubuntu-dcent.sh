@@ -122,13 +122,6 @@ while getopts 'hn:i:u:p:r:t:d:glc' OPTION; do
 done
 shift "$(($OPTIND -1))"
 
-if [ "$gvalue" == true ] ; then
-  if [ -z "$dvalue" ] ; then
-    echo -e "dcgm-exporter port is picking default value: 9400."
-    dvalue=9400
-  fi
-fi
-
 if [ "$cvalue" == true ] ; then
   echo -e "\n"
   echo "Checking Status... "
@@ -197,15 +190,6 @@ else
     exit 1
   fi
 
-  echo -n "Checking if port is open to use (dcgm-exporter) ..."
-  d_inuse=$((echo >/dev/tcp/localhost/$dvalue) &>/dev/null && echo "open" || echo "close")
-  if [ "$d_inuse" == "open" ] ; then
-    echo " Port already in use" >&2
-    exit 1
-  else
-  echo " Success"
-  fi
-
   echo -e "\n"
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   echo "@     Setting Carbonara Working Directory as '/carbonara'     @"
@@ -244,60 +228,6 @@ else
     sudo systemctl daemon-reload \
       && sudo systemctl restart node_exporter \
       && sudo systemctl enable node_exporter
-  fi
-
-  if [ "$gvalue" == true ] ; then
-    echo -e "\n"
-    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    echo '@ **Step 2:** Install DCGM exporter tool, for host **GPU (Nvidia)** power consumption data  @'
-    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    echo "Current VGA devices:"
-    lspci | grep -E 'VGA|Display ' | cut -d" " -f 1 | xargs -i lspci -v -s {}
-
-    # if [ "$fvalue" == true ] ; then
-    #   echo "Installing Nvidia Driver ..."
-    #   sudo apt-get update && sudo apt-get install -y ubuntu-drivers-common && sudo ubuntu-drivers devices \
-    #     && sudo apt -y upgrade \
-    #     && sudo apt-get install -y nvidia-driver-530
-    #     # && sudo ubuntu-drivers autoinstall
-    # fi
-
-    if [ -x "$(command -v nvidia-smi)" ] ; then
-      echo "Installing DCGM GPU Manager ..."
-      # set up the CUDA repository GPG key
-      # assuming x86_64 arch
-      sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
-        && sudo dpkg -i cuda-keyring_1.0-1_all.deb \
-        && sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
-
-      # install GPU Manager
-      sudo apt update && sudo apt install -y datacenter-gpu-manager \
-        && sudo systemctl enable nvidia-dcgm \
-        && sudo systemctl restart nvidia-dcgm
-      #  && sudo dcgmi discovery -l
-
-      echo "Installing DCGM Exporter ..."
-      # IPMI Exporter
-      sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm-exporter -o /usr/bin/dcgm-exporter && sudo chmod 755 /usr/bin/dcgm-exporter
-
-      if [ -f "/etc/systemd/system/dcgm_exporter.service" ]; then
-        sudo cp /etc/systemd/system/dcgm_exporter.service /etc/systemd/system/dcgm_exporter.service.backup
-        echo "Backing up existing dcgm_exporter.service to '/etc/systemd/system/dcgm_exporter.service.backup'"
-      fi
-
-      sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm_exporter.service -o /etc/systemd/system/dcgm_exporter.service \
-        && sudo mkdir -p /etc/sysconfig \
-        && sudo echo 'OPTIONS="--address=:'$dvalue'"' | sudo tee /etc/sysconfig/dcgm_exporter > /dev/null \
-        && sudo mkdir -p /etc/dcgm-exporter \
-        && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/default-counters.csv -o /etc/dcgm-exporter/default-counters.csv \
-        && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcp-metrics-included.csv -o /etc/dcgm-exporter/dcp-metrics-included.csv
-
-      sudo systemctl daemon-reload \
-        && sudo systemctl restart dcgm_exporter \
-        && sudo systemctl enable dcgm_exporter
-    fi
-  else
-    echo "Skipping GPU ..."
   fi
 
   echo -e "\n"
