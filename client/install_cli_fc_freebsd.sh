@@ -128,7 +128,7 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "@     Setting Carbonara Working Directory as '/carbonara'     @"
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 mkdir -p /carbonara
-chmod 777 -R /carbonara/
+chmod 777 /carbonara
 cd /carbonara
 pkg install -y curl
 
