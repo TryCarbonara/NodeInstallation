@@ -162,7 +162,8 @@ sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/
 sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml \
   # && sudo chown prometheus:prometheus /etc/prometheus/web.yml
 
-sudo sed -i "s/\${PROM_INSTANCE}/$(hostname -I | cut -f1 -d' ')/g" /etc/prometheus/prometheus.yml
+ip_addr=$(curl -s ifconfig.me)
+sudo sed -i "s/\${PROM_INSTANCE}/$ip_addr/g" /etc/prometheus/prometheus.yml
 sudo sed -i "s/\${REMOTE_ENDPOINT}/$rvalue/g" /etc/prometheus/prometheus.yml
 sudo sed -i "s/\${REMOTE_PORT}/$tvalue/g" /etc/prometheus/prometheus.yml
 sudo sed -i "s/\${AUTH_UNAME}/$uvalue/g" /etc/prometheus/prometheus.yml

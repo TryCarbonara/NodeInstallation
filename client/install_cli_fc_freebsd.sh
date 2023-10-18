@@ -137,6 +137,8 @@ echo -e "\n"
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo '@   Install node exporter tool, for host resource usage data   @'
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+# enable module which provides access to thermal sensors and power management features, including RAPL data
+kldload coretemp || true
 echo "Installing Node Exporter ..."
 # sed -i .backup 's/node_exporter_args:=""/node_exporter_args:="--collector.uname --collector.meminfo --collector.cpu --web.disable-exporter-metrics"/g' /usr/local/etc/rc.d/node_exporter
 fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.freebsd -o /usr/local/bin/node_exporter \
@@ -145,7 +147,7 @@ fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/clien
 fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.rc.d -o /usr/local/etc/rc.d/node_exporter \
   && chmod +x /usr/local/etc/rc.d/node_exporter \
   && sysrc node_exporter_enable=YES \
-  && sysrc node_exporter_args="--web.disable-exporter-metrics" \
+  && sysrc node_exporter_args="--collector.meminfo --collector.uname --collector.cpu --web.disable-exporter-metrics" \
   && service node_exporter restart
 
 # FreeIPMI
@@ -156,6 +158,7 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 # enable ipmi if underlying h/w & kernel supports it
 kldload ipmi || true
 kldload ipmi_drv || true
+echo 'ipmi_load="YES"' >> /boot/loader.conf
 pkg install -y sysutils/freeipmi ipmitool
 sysrc freeipmi_enable=YES
 sysrc ipmitool_enable=YES
@@ -183,7 +186,7 @@ fetch https://github.com/grafana/agent/releases/download/v0.36.2/grafana-agent-f
 
 fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/grafana_agent.rc.d -o /usr/local/etc/rc.d/grafana_agent \
   && fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client-fc.yaml -o /etc/grafana-agent.yaml
-ip_addr=$(curl -s ifconfig.me)
+ip_addr=$(ifconfig | grep -Eo 'inet (addr:)?[0-9\.]+' | awk '{print $2}' | grep -v '127.0.0.1' | sed -n '2p')
 sed -i -e "s/\${INSTANCE}/$ip_addr/g" /etc/grafana-agent.yaml
 sed -i -e "s/\${PROVIDER}/$uvalue/g" /etc/grafana-agent.yaml
 sed -i -e "s/\${HOSTNAME}/$(hostname)/g" /etc/grafana-agent.yaml
