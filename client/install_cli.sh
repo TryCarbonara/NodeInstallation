@@ -435,8 +435,8 @@ else
   echo '@   **Step 3:** Install node exporter tool, for host resource usage data   @'
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   echo "Installing Node Exporter ..."
-  sudo curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-amd64.tar.gz \
-    | sudo tar -zxvf - -C /usr/local/bin --strip-components=1 node_exporter-1.3.1.linux-amd64/node_exporter \
+  sudo curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz \
+    | sudo tar -zxvf - -C /usr/local/bin --strip-components=1 node_exporter-1.6.1.linux-amd64/node_exporter \
     && sudo chown root:root /usr/local/bin/node_exporter
 
   if [ -f "/etc/systemd/system/node_exporter.service" ]; then

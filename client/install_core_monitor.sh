@@ -170,7 +170,7 @@ sudo sed -i "s/\${AUTH_UNAME}/$uvalue/g" /etc/prometheus/prometheus.yml
 sudo sed -i "s/\${AUTH_PWD}/$pvalue/g" /etc/prometheus/prometheus.yml
 
 sudo systemctl daemon-reload \
-    && sudo systemctl start prometheus \
+    && sudo systemctl restart prometheus \
     && sudo systemctl enable prometheus
 
 echo -e "Cleaning not-in-use packages"
