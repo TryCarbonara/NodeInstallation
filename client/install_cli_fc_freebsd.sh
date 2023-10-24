@@ -140,7 +140,10 @@ fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/clien
 fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.rc.d -o /usr/local/etc/rc.d/node_exporter \
   && chmod +x /usr/local/etc/rc.d/node_exporter \
   && sysrc node_exporter_enable=YES \
-  && sysrc node_exporter_args="--collector.meminfo --collector.uname --collector.cpu --web.disable-exporter-metrics --web.listen-address=:$nvalue" \
+  && sysrc node_exporter_args="--collector.meminfo --collector.uname --collector.cpu --web.disable-exporter-metrics" \
+  && sysrc node_exporter_listen_address=":$nvalue" \
+  && sysrc node_exporter_user="root" \
+  && sysrc node_exporter_group="root" \
   && service node_exporter restart
 
 # FreeIPMI
@@ -163,7 +166,7 @@ fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/clien
   && fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/ipmi_local.yml -o /carbonara/ipmi_local.yml \
   && sysrc ipmi_exporter_enable=YES \
   && sysrc ipmi_exporter_config_file="/carbonara/ipmi_local.yml" \
-  && sysrc ipmi_exporter_listen_address=":$ivalue"
+  && sysrc ipmi_exporter_listen_address=":$ivalue" \
   && chmod +x /usr/local/etc/rc.d/ipmi_exporter \
   && service ipmi_exporter restart
 
