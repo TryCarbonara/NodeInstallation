@@ -308,9 +308,10 @@ else
       echo "Installing DCGM GPU Manager ..."
       # set up the CUDA repository GPG key
       # assuming x86_64 arch
-      sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
+      release=$(echo "ubuntu$(lsb_release -r | awk '{print $2}' | tr -d .)")
+      sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
         && sudo dpkg -i cuda-keyring_1.0-1_all.deb \
-        && sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
+        && sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /"
 
       # install GPU Manager
       sudo apt update && sudo apt install -y datacenter-gpu-manager \

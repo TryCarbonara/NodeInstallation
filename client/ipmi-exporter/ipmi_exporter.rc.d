@@ -29,7 +29,7 @@ load_rc_config $name
 pidfile=/var/run/ipmi_exporter.pid
 command="/usr/sbin/daemon"
 procname="/usr/local/bin/ipmi_exporter"
-command_args="-f -p ${pidfile} -T ${name} \
+command_args="-u root -f -p ${pidfile} -T ${name} \
     /usr/bin/env ${procname} \
     --web.listen-address=${ipmi_exporter_listen_address} \
     --config.file=${ipmi_exporter_config_file} \

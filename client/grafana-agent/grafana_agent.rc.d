@@ -26,7 +26,7 @@ load_rc_config $name
 pidfile=/var/run/grafana_agent.pid
 command="/usr/sbin/daemon"
 procname="/usr/local/bin/grafana_agent"
-command_args="-f -p ${pidfile} -T ${name} \
+command_args="-u root -f -p ${pidfile} -T ${name} \
     /usr/bin/env ${procname} \
     -config.expand-env -server.http.address=127.0.0.1:9090 -server.grpc.address=127.0.0.1:9091 \
     -config.file=${grafana_agent_config_file} \
