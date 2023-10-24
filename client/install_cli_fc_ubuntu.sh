@@ -362,7 +362,7 @@ else
 
   sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.service -o /etc/systemd/system/node_exporter.service \
     && sudo mkdir -p /etc/sysconfig \
-    && sudo echo 'OPTIONS="--collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\d+$\"  --web.listen-address=:'$nvalue'"' | sudo tee /etc/sysconfig/node_exporter > /dev/null
+    && sudo echo 'OPTIONS="--collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\d+$\" --collector.zfs --web.listen-address=:'$nvalue'"' | sudo tee /etc/sysconfig/node_exporter > /dev/null
 
   sudo systemctl daemon-reload \
     && sudo systemctl restart node_exporter \
