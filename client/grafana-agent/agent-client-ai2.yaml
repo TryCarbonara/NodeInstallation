@@ -47,7 +47,7 @@ metrics:
           metric_relabel_configs:
             # Include only the metrics you want by using regex patterns to filter them
             - source_labels: [__name__]
-              regex: 'node_cpu_info|node_cpu_seconds_total|node_filesystem_size_bytes|node_memory_MemTotal_bytes|node_memory_MemFree_bytes|node_memory_MemAvailable_bytes|node_network_receive_bytes_total|node_network_transmit_bytes_total|node_disk_reads_completed_total|node_disk_writes_completed_total|node_rapl_package_joules_total|node_rapl_dram_joules_total'
+              regex: 'node_cpu_info|node_cpu_seconds_total|node_filesystem_size_bytes|node_memory_MemTotal_bytes|node_memory_MemFree_bytes|node_memory_MemAvailable_bytes|node_network_receive_bytes_total|node_network_transmit_bytes_total|node_disk_reads_completed_total|node_disk_writes_completed_total|node_rapl_package_joules_total|node_rapl_dram_joules_total|node_disk_written_bytes_total|node_disk_io_time_seconds_total|node_disk_read_bytes_total'
               action: keep
     - name: ipmi-agent
       scrape_configs:

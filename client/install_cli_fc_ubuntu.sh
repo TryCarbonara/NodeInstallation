@@ -248,7 +248,7 @@ else
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   sudo apt-get update
   sudo apt install -y net-tools
-  sudo apt-get install -y curl tar wget sed
+  sudo apt-get install -y curl tar wget
   sudo apt install -y figlet
   # sudo useradd --system --shell /bin/false carbonara_exporter || \
   #   echo "User already exists."
@@ -304,21 +304,13 @@ else
     echo "Current VGA devices:"
     lspci | grep -E 'VGA|Display ' | cut -d" " -f 1 | xargs -i lspci -v -s {}
 
-    # if [ "$fvalue" == true ] ; then
-    #   echo "Installing Nvidia Driver ..."
-    #   sudo apt-get update && sudo apt-get install -y ubuntu-drivers-common && sudo ubuntu-drivers devices \
-    #     && sudo apt -y upgrade \
-    #     && sudo apt-get install -y nvidia-driver-530
-    #     # && sudo ubuntu-drivers autoinstall
-    # fi
-
     if [ -x "$(command -v nvidia-smi)" ] ; then
       echo "Installing DCGM GPU Manager ..."
       # set up the CUDA repository GPG key
       # assuming x86_64 arch
-      sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
+      sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
         && sudo dpkg -i cuda-keyring_1.0-1_all.deb \
-        && sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+        && sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
 
       # install GPU Manager
       sudo apt update && sudo apt install -y datacenter-gpu-manager \
@@ -355,8 +347,8 @@ else
   echo '@   **Step 3:** Install node exporter tool, for host resource usage data   @'
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   echo "Installing Node Exporter ..."
-  sudo curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz \
-    | sudo tar -zxvf - -C /usr/local/bin --strip-components=1 node_exporter-1.6.1.linux-amd64/node_exporter \
+  sudo curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-amd64.tar.gz \
+    | sudo tar -zxvf - -C /usr/local/bin --strip-components=1 node_exporter-1.3.1.linux-amd64/node_exporter \
     && sudo chown root:root /usr/local/bin/node_exporter
 
   if [ -f "/etc/systemd/system/node_exporter.service" ]; then
@@ -370,7 +362,7 @@ else
 
   sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.service -o /etc/systemd/system/node_exporter.service \
     && sudo mkdir -p /etc/sysconfig \
-    && sudo echo 'OPTIONS="--collector.disable-defaults --collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\\\d+$\"  --web.listen-address=:'$nvalue'"' | sudo tee /etc/sysconfig/node_exporter > /dev/null
+    && sudo echo 'OPTIONS="--collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\d+$\"  --web.listen-address=:'$nvalue'"' | sudo tee /etc/sysconfig/node_exporter > /dev/null
 
   sudo systemctl daemon-reload \
     && sudo systemctl restart node_exporter \
@@ -399,16 +391,16 @@ else
     sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client-fc.yaml -o /etc/grafana-agent.yaml && \
     sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/sysconfig.grafana_agent -o /etc/default/grafana-agent
 
-    sudo sed -i "s/\${INSTANCE}/$(hostname -I | cut -f1 -d' ')/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${PROVIDER}/$uvalue/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${HOSTNAME}/$(hostname)/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${REMOTE_ENDPOINT}/$rvalue/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${REMOTE_PORT}/$tvalue/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${AUTH_UNAME}/$uvalue/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${AUTH_PWD}/$pvalue/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${NODE_PORT}/$nvalue/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${IPMI_PORT}/$ivalue/g" /etc/grafana-agent.yaml
-    sudo sed -i "s/\${DCGM_PORT}/$dvalue/g" /etc/grafana-agent.yaml
+    sudo echo "INSTANCE=$(hostname -I | cut -f1 -d' ')" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "PROVIDER=$uvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "HOSTNAME=$(hostname)" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "REMOTE_ENDPOINT=$rvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "REMOTE_PORT=$tvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "AUTH_UNAME=$uvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "AUTH_PWD=$pvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "NODE_PORT=$nvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "IPMI_PORT=$ivalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "DCGM_PORT=$dvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
 
     sudo systemctl daemon-reload \
       && sudo systemctl restart grafana-agent \

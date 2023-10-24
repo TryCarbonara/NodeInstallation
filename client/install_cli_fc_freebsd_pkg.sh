@@ -105,13 +105,6 @@ if [ -z "$ivalue" ] ; then
   ivalue=9290
 fi
 
-if [ "$gvalue" == true ] ; then
-  if [ -z "$dvalue" ] ; then
-    echo -e "dcgm-exporter port is picking default value: 9400."
-    dvalue=9400
-  fi
-fi
-
 if [ -z "$uvalue" ] || [ -z "$pvalue" ] ; then
   echo "Username/Password (account), to connect to Carbonara Service, is required. Use '-h' flag to learn more." >&2
   exit 1
