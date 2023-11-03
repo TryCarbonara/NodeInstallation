@@ -142,8 +142,6 @@ fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/clien
   && sysrc node_exporter_enable=YES \
   && sysrc node_exporter_args="--collector.meminfo --collector.uname --collector.cpu --web.disable-exporter-metrics" \
   && sysrc node_exporter_listen_address=":$nvalue" \
-  && sysrc node_exporter_user="root" \
-  && sysrc node_exporter_group="root" \
   && service node_exporter restart
 
 # FreeIPMI
