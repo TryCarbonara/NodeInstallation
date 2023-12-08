@@ -22,7 +22,7 @@
 #%    -r : Target Carbonara Remote Endpoint | Required
 #%    -t : Target Carbonara Remote Port | Required
 #%    -l : Local | Default: false
-#%    -c : Check Status | Default: false
+#%    -k : Check Status | Default: false
 #%
 #% EXAMPLES
 #%    ./install_cli_fc_ubuntu.sh -g -u arg1 -p arg2 -r arg3 -o arg4
@@ -52,9 +52,9 @@ set +e
 # sudo chmod +x install_cli.sh
 gvalue=false
 lvalue=false
-cvalue=false
+kvalue=false
 
-while getopts 'hn:i:u:p:r:t:d:glc' OPTION; do
+while getopts 'hn:i:u:p:r:t:d:gls' OPTION; do
   case "$OPTION" in
     h)
       echo "script usage: $(basename $0) [<flags>]"
@@ -69,7 +69,7 @@ while getopts 'hn:i:u:p:r:t:d:glc' OPTION; do
       echo "  -r : Target Carbonara Remote Endpoint | Required"
       echo "  -t : Target Carbonara Remote Port | Required"
       echo "  -l : Local | Default: false"
-      echo "  -c : Check Status | Default: false"
+      echo "  -k : Check Status | Default: false"
       exit 0
       ;;
     n)
@@ -99,8 +99,8 @@ while getopts 'hn:i:u:p:r:t:d:glc' OPTION; do
     d)
       dvalue="$OPTARG"
       ;;
-    c)
-      cvalue=true
+    k)
+      kvalue=true
       ;;
     ?)
       echo "script usage: $(basename $0) [<flags>]" >&2
@@ -115,7 +115,7 @@ while getopts 'hn:i:u:p:r:t:d:glc' OPTION; do
       echo "  -r : Target Carbonara Remote Endpoint | Required" >&2
       echo "  -t : Target Carbonara Remote Port | Required" >&2
       echo "  -l : Local | Default: false" >&2
-      echo "  -c : Check Status | Default: false" >&2
+      echo "  -k : Check Status | Default: false" >&2
       exit 1
       ;;
   esac
@@ -139,7 +139,7 @@ if [ "$gvalue" == true ] ; then
   fi
 fi
 
-if [ "$cvalue" == true ] ; then
+if [ "$kvalue" == true ] ; then
   echo -e "\n"
   echo "Checking Status... "
   if ls /dev/ipmi* 1> /dev/null 2>&1; then

@@ -24,7 +24,7 @@
 #%    -t : Target Carbonara Remote Port | Required
 #%    -l : Local | Default: false
 #%    -y : Confirm Installation | Default: false
-#%    -c : Check Status | Default: false
+#%    -k : Check Status | Default: false
 #%    -e : Instance Identifier | Default: External IP or Internal IP
 #%
 #% EXAMPLES
@@ -56,7 +56,7 @@ set +e
 gvalue=false
 lvalue=false
 yvalue=false
-cvalue=false
+kvalue=false
 
 while getopts 'hn:i:u:p:r:t:d:s:e:glyc' OPTION; do
   case "$OPTION" in
@@ -75,7 +75,7 @@ while getopts 'hn:i:u:p:r:t:d:s:e:glyc' OPTION; do
       echo "  -t : Target Carbonara Remote Port | Required"
       echo "  -l : Local | Default: false"
       echo "  -y : Confirm Installation | Default: false"
-      echo "  -c : Check Status | Default: false"
+      echo "  -k : Check Status | Default: false"
       echo "  -e : Instance Identifier | Default: External IP or Internal IP"
       exit 0
       ;;
@@ -109,8 +109,8 @@ while getopts 'hn:i:u:p:r:t:d:s:e:glyc' OPTION; do
     s)
       svalue="$OPTARG"
       ;;
-    c)
-      cvalue=true
+    k)
+      kvalue=true
       ;;
     y)
       yvalue=true
@@ -133,7 +133,7 @@ while getopts 'hn:i:u:p:r:t:d:s:e:glyc' OPTION; do
       echo "  -t : Target Carbonara Remote Port | Required" >&2
       echo "  -l : Local | Default: false" >&2
       echo "  -y : Confirm Installation | Default: false" >&2
-      echo "  -c : Check Status | Default: false" >&2
+      echo "  -k : Check Status | Default: false" >&2
       echo "  -e : Instance Identifier | Default: External IP or Internal IP" >&2
       exit 1
       ;;
@@ -162,7 +162,7 @@ if [ "$gvalue" == true ] ; then
   fi
 fi
 
-if [ "$cvalue" == true ] ; then
+if [ "$kvalue" == true ] ; then
   echo -e "\n"
   echo "Checking Status... "
   if ls /dev/ipmi* 1> /dev/null 2>&1; then
@@ -374,9 +374,10 @@ else
       echo "Installing DCGM GPU Manager ..."
       # set up the CUDA repository GPG key
       # assuming x86_64 arch
-      sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
+      release=$(echo "ubuntu$(lsb_release -r | awk '{print $2}' | tr -d .)")
+      sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
         && sudo dpkg -i cuda-keyring_1.0-1_all.deb \
-        && sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
+        && sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /"
 
       # install GPU Manager
       sudo apt update && sudo apt install -y datacenter-gpu-manager \
@@ -435,8 +436,8 @@ else
   echo '@   **Step 3:** Install node exporter tool, for host resource usage data   @'
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   echo "Installing Node Exporter ..."
-  sudo curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz \
-    | sudo tar -zxvf - -C /usr/local/bin --strip-components=1 node_exporter-1.6.1.linux-amd64/node_exporter \
+  sudo curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-amd64.tar.gz \
+    | sudo tar -zxvf - -C /usr/local/bin --strip-components=1 node_exporter-1.3.1.linux-amd64/node_exporter \
     && sudo chown root:root /usr/local/bin/node_exporter
 
   if [ -f "/etc/systemd/system/node_exporter.service" ]; then
@@ -450,7 +451,7 @@ else
 
   sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.service -o /etc/systemd/system/node_exporter.service \
     && sudo mkdir -p /etc/sysconfig \
-    && sudo echo 'OPTIONS="--collector.disable-defaults --collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\\\d+$\"  --web.listen-address=:'$nvalue'"' | sudo tee /etc/sysconfig/node_exporter > /dev/null
+    && sudo echo 'OPTIONS="--collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\\\d+$\"  --web.listen-address=:'$nvalue'"' | sudo tee /etc/sysconfig/node_exporter > /dev/null
 
   sudo systemctl daemon-reload \
     && sudo systemctl restart node_exporter \

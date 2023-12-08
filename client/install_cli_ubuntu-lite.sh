@@ -3,13 +3,13 @@
 # HEADER
 #================================================================
 #% SYNOPSIS
-#+    script usage: install_cli_fc_ubuntu.sh [<flags>]
+#+    script usage: install_cli_ubuntu.sh [<flags>]
 #%
 #% DESCRIPTION
 #%    This is a script template to install and configure required toolings for
 #%    publishing energy consumption and usage data for calculating carbon emission
 #%    Please refer: https://trycarbonara.github.io/docs/dist/html/linux-machine.html
-#%    Support: Linux (Ubuntu >= 22.04), Kernel >= 5
+#%    Support: Linux (Ubuntu >= 20.04), Kernel >= 5
 #%
 #% OPTIONS
 #%    -h : Show usage
@@ -17,26 +17,25 @@
 #%    -n : node-exporter port | Default: 9100
 #%    -i : ipmi-exporter port | Default: 9290
 #%    -d : dcgm-exporter port | Default: 9400
-#%    -m : smi-gpu-exporter port | Default: 9835
-#%    -c : cadvisor port | Default: 8080
+#%    -s : smi-gpu-exporter port | Default: 9835
 #%    -u : Carbonara Username | Required
 #%    -p : Carbonara Password | Required
 #%    -r : Target Carbonara Remote Endpoint | Required
 #%    -t : Target Carbonara Remote Port | Required
 #%    -l : Local | Default: false
-#%    -s : Check Status | Default: false
+#%    -k : Check Status | Default: false
 #%
 #% EXAMPLES
-#%    ./install_cli_fc_ubuntu.sh -g -u arg1 -p arg2 -r arg3 -o arg4
+#%    ./install_cli_ubuntu.sh -g -u arg1 -p arg2 -r arg3 -o arg4
 #%
-#==========================================================================
+#=======================================================================
 #- IMPLEMENTATION
-#-    version         install_cli_fc_ubuntu.sh (www.trycarbonara.com) 0.0.1
+#-    version         install_cli_ubuntu.sh (www.trycarbonara.com) 0.0.1
 #-    author          Saurabh Sarkar
 #-    copyright       Copyright (c) http://www.trycarbonara.com
 #-    license         GNU General Public License
 #-
-#==========================================================================
+#=======================================================================
 #  HISTORY
 #     09/16/2023 : saurabh-carbonara : Script creation
 # 
@@ -54,9 +53,9 @@ set +e
 # sudo chmod +x install_cli.sh
 gvalue=false
 lvalue=false
-cvalue=false
+kvalue=false
 
-while getopts 'hn:i:u:p:r:t:d:glc:sm:' OPTION; do
+while getopts 'hn:i:u:p:r:t:d:s:glk' OPTION; do
   case "$OPTION" in
     h)
       echo "script usage: $(basename $0) [<flags>]"
@@ -66,14 +65,13 @@ while getopts 'hn:i:u:p:r:t:d:glc:sm:' OPTION; do
       echo "  -n : node-exporter port | Default: 9100"
       echo "  -i : ipmi-exporter port | Default: 9290"
       echo "  -d : dcgm-exporter port | Default: 9400"
-      echo "  -m : smi-gpu-exporter port | Default: 9835"
-      echo "  -c : cadvisor port | Default: 8080"
+      echo "  -s : smi-gpu-exporter port | Default: 9835"
       echo "  -u : Carbonara Username | Required"
       echo "  -p : Carbonara Password | Required"
       echo "  -r : Target Carbonara Remote Endpoint | Required"
       echo "  -t : Target Carbonara Remote Port | Required"
       echo "  -l : Local | Default: false"
-      echo "  -s : Check Status | Default: false"
+      echo "  -k : Check Status | Default: false"
       exit 0
       ;;
     n)
@@ -103,14 +101,11 @@ while getopts 'hn:i:u:p:r:t:d:glc:sm:' OPTION; do
     d)
       dvalue="$OPTARG"
       ;;
-    c)
-      cvalue="$OPTARG"
-      ;;
-    m)
-      mvalue="$OPTARG"
-      ;;
     s)
-      svalue=true
+      svalue="$OPTARG"
+      ;;
+    k)
+      kvalue=true
       ;;
     ?)
       echo "script usage: $(basename $0) [<flags>]" >&2
@@ -120,14 +115,13 @@ while getopts 'hn:i:u:p:r:t:d:glc:sm:' OPTION; do
       echo "  -n : node-exporter port | Default: 9100" >&2
       echo "  -i : ipmi-exporter port | Default: 9290" >&2
       echo "  -d : dcgm-exporter port | Default: 9400" >&2
-      echo "  -m : smi-gpu-exporter port | Default: 9835" >&2
-      echo "  -c : cadvisor port | Default: 8080" >&2
+      echo "  -s : smi-gpu-exporter port | Default: 9835" >&2
       echo "  -u : Carbonara Username | Required" >&2
       echo "  -p : Carbonara Password | Required" >&2
       echo "  -r : Target Carbonara Remote Endpoint | Required" >&2
       echo "  -t : Target Carbonara Remote Port | Required" >&2
       echo "  -l : Local | Default: false" >&2
-      echo "  -s : Check Status | Default: false" >&2
+      echo "  -k : Check Status | Default: false" >&2
       exit 1
       ;;
   esac
@@ -149,24 +143,19 @@ if [ "$gvalue" == true ] ; then
     echo -e "dcgm-exporter port is picking default value: 9400."
     dvalue=9400
   fi
-  if [ -z "$mvalue" ] ; then
-    echo -e "smi-gpu-exporter port is picking default value: 9835."
-    mvalue=9835
+  if [ -z "$svalue" ] ; then
+    echo -e  "smi-gpu-exporter port is picking default value: 9835."
+    svalue=9835
   fi
 fi
 
-if [ -z "$cvalue" ] ; then
-  echo -e "cadvisor-exporter port is picking default value: 8080."
-  cvalue=8080
-fi
-
-if [ "$svalue" == true ] ; then
+if [ "$kvalue" == true ] ; then
   echo -e "\n"
   echo "Checking Status... "
   if ls /dev/ipmi* 1> /dev/null 2>&1; then
     echo -n "Checking port (ipmi-exporter) ..."
-    s_inuse=$((echo >/dev/tcp/localhost/$ivalue) &>/dev/null && echo "open" || echo "close")
-    if [ "$s_inuse" == "open" ] ; then
+    i_inuse=$((echo >/dev/tcp/localhost/$ivalue) &>/dev/null && echo "open" || echo "close")
+    if [ "$i_inuse" == "open" ] ; then
       echo " Port in use" >&2
     else
       echo " Port not in use" >&2
@@ -197,8 +186,8 @@ if [ "$svalue" == true ] ; then
     fi
 
     echo -n "Checking port (smi-gpu-exporter) ..."
-    m_inuse=$((echo >/dev/tcp/localhost/$mvalue) &>/dev/null && echo "open" || echo "close")
-    if [ "$m_inuse" == "open" ] ; then
+    d_inuse=$((echo >/dev/tcp/localhost/$svalue) &>/dev/null && echo "open" || echo "close")
+    if [ "$d_inuse" == "open" ] ; then
       echo " Port in use" >&2
     else
       echo " Port not in use" >&2
@@ -223,20 +212,6 @@ if [ "$svalue" == true ] ; then
     echo "Node Exporter ... Succeeded"
   else
     echo "Node Exporter ... Failed"
-  fi
-
-  echo -n "Checking port (cadvisor-exporter) ..."
-  c_inuse=$((echo >/dev/tcp/localhost/$cvalue) &>/dev/null && echo "open" || echo "close")
-  if [ "$c_inuse" == "open" ] ; then
-    echo " Port in use" >&2
-  else
-    echo " Port not is use" >&2
-  fi
-  sd=$(sudo systemctl status cadvisor.service)
-  if [ $? == 0 ]; then
-    echo "Cadvisor Exporter ... Succeeded"
-  else
-    echo "Cadvisor Exporter ... Failed"
   fi
 
   sd=$(sudo systemctl status grafana-agent.service)
@@ -283,18 +258,9 @@ else
   echo " Success"
   fi
 
-  echo -n "Checking if port is open to use (cadvisor-exporter) ..."
-  c_inuse=$((echo >/dev/tcp/localhost/$cvalue) &>/dev/null && echo "open" || echo "close")
-  if [ "$c_inuse" == "open" ] ; then
-    echo " Port already in use" >&2
-    exit 1
-  else
-  echo " Success"
-  fi
-
   echo -n "Checking if port is open to use (smi-gpu-exporter) ..."
-  m_inuse=$((echo >/dev/tcp/localhost/$mvalue) &>/dev/null && echo "open" || echo "close")
-  if [ "$m_inuse" == "open" ] ; then
+  s_inuse=$((echo >/dev/tcp/localhost/$svalue) &>/dev/null && echo "open" || echo "close")
+  if [ "$s_inuse" == "open" ] ; then
     echo " Port already in use" >&2
     exit 1
   else
@@ -317,7 +283,6 @@ else
   sudo apt install -y net-tools
   sudo apt-get install -y curl tar wget
   sudo apt install -y figlet
-  sudo apt -y upgrade && sudo apt install -y docker.io
   # sudo useradd --system --shell /bin/false carbonara_exporter || \
   #   echo "User already exists."
 
@@ -379,7 +344,7 @@ else
       release=$(echo "ubuntu$(lsb_release -r | awk '{print $2}' | tr -d .)")
       sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
         && sudo dpkg -i cuda-keyring_1.0-1_all.deb \
-        && sudo add-apt-repository -y "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /"
+        && sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /"
 
       # install GPU Manager
       sudo apt update && sudo apt install -y datacenter-gpu-manager \
@@ -460,34 +425,8 @@ else
     && sudo systemctl enable node_exporter
 
   echo -e "\n"
-  echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-  echo "@    **Step 4:** Install cAvisor exporter, for enabling container usage data     @"
-  echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-  wget https://nvidia.github.io/nvidia-docker/gpgkey --no-check-certificate
-  sudo apt-key add gpgkey
-  distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-  curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-  sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit && sudo systemctl daemon-reload && sudo systemctl restart docker
-  sudo apt-get install -y python3-docker
-  
-  VERSION=v0.36.0 # use the latest release version from https://github.com/google/cadvisor/releases
-  sudo docker run \
-    --volume=/:/rootfs:ro \
-    --volume=/var/run:/var/run:ro \
-    --volume=/sys:/sys:ro \
-    --volume=/var/lib/docker/:/var/lib/docker:ro \
-    --volume=/dev/disk/:/dev/disk:ro \
-    --publish=$cvalue:8080 \
-    --detach=true \
-    --name=cadvisor \
-    --privileged \
-    --device=/dev/kmsg \
-    --restart=always \
-    gcr.io/cadvisor/cadvisor:$VERSION
-
-  echo -e "\n"
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-  echo "@     **Step 5:** Install Grafana Agent, for enabling metrics push      @"
+  echo "@     **Step 4:** Install Grafana Agent, for enabling metrics push      @"
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   if [ $lvalue == false ] ; then
     sudo mkdir -p /etc/apt/keyrings/
@@ -518,8 +457,7 @@ else
     sudo echo "NODE_PORT=$nvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
     sudo echo "IPMI_PORT=$ivalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
     sudo echo "DCGM_PORT=$dvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "CADVISOR_PORT=$cvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
-    sudo echo "SMI_PORT=$mvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
+    sudo echo "SMI_PORT=$svalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
 
     sudo systemctl daemon-reload \
       && sudo systemctl restart grafana-agent \
