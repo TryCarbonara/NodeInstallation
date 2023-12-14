@@ -77,6 +77,17 @@ metrics:
             - targets: ['localhost:${SMI_PORT}']
               labels:
                 instance: '${INSTANCE}:${SMI_PORT}'
+    - name: process-agent
+      scrape_configs:
+        - job_name: 'process-exporter'
+          metrics_path: /metrics
+          honor_labels: true
+          honor_timestamps: false
+          static_configs:
+            # process_exporter localhost port
+            - targets: ['localhost:${PROCESS_PORT}']
+              labels:
+                instance: '${INSTANCE}:${PROCESS_PORT}'
     - name: cadvisor-agent
       scrape_configs:
         - job_name: 'cadvisor-exporter'
