@@ -485,7 +485,8 @@ setup_grafana_agent() {
   sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client.yaml -o /etc/grafana-agent.yaml && \
   sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/sysconfig.grafana_agent -o /etc/default/grafana-agent
 
-  sudo echo "INSTANCE=$(hostname -I | cut -f1 -d' ')" | sudo tee -a /etc/default/grafana-agent > /dev/null
+  ip_addr=$(curl -s ifconfig.me || hostname -I | cut -f1 -d' ')
+  sudo echo "INSTANCE=$ip_addr" | sudo tee -a /etc/default/grafana-agent > /dev/null
   sudo echo "PROVIDER=$uvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
   sudo echo "HOSTNAME=$(hostname)" | sudo tee -a /etc/default/grafana-agent > /dev/null
   sudo echo "REMOTE_ENDPOINT=$rvalue" | sudo tee -a /etc/default/grafana-agent > /dev/null
