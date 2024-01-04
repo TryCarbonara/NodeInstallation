@@ -8,7 +8,8 @@ Type=simple
 User=root
 Group=root
 
-ExecStart=/usr/bin/nvidia_gpu_exporter
+EnvironmentFile=/etc/sysconfig/nvidia_gpu_exporter
+ExecStart=/usr/bin/nvidia_gpu_exporter $OPTIONS
 
 SyslogIdentifier=nvidia_gpu_exporter
 
