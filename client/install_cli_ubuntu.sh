@@ -313,7 +313,7 @@ setup_ipmi() {
   # check if ipmi is supported
   if ls /dev/ipmi* 1> /dev/null 2>&1; then
     echo "Installing FreeIPMI tool suite ..."
-    ($vvalue && sudo apt-get install freeipmi-tools -y --no-install-recommends --no-show-upgraded --quiet --no-upgrade) \
+    ($vvalue && sudo apt-get install freeipmi-tools -y --no-install-recommends --no-show-upgraded --no-upgrade) \
       || (sudo apt-get install freeipmi-tools -y --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
 
     echo "Installing IPMI Exporter ..."
@@ -363,7 +363,7 @@ setup_dcgm() {
       && sudo add-apt-repository -y "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /"  > /dev/null)
 
     # install GPU Manager
-    ($vvalue && sudo apt-get update && sudo apt install -y datacenter-gpu-manager --no-install-recommends --no-show-upgraded --quiet --no-upgrade) \
+    ($vvalue && sudo apt-get update && sudo apt install -y datacenter-gpu-manager --no-install-recommends --no-show-upgraded --no-upgrade) \
       || (sudo apt-get update > /dev/null && sudo apt install -y datacenter-gpu-manager --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
     sudo systemctl enable nvidia-dcgm \
       && sudo systemctl restart nvidia-dcgm
@@ -443,8 +443,8 @@ setup_cadvisor() {
   sudo apt-key add gpgkey
   distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
   curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-  ($vvalue && sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit --no-install-recommends --no-show-upgraded --quiet --no-upgrade && sudo systemctl daemon-reload && sudo systemctl restart docker \
-    && sudo apt-get install -y python3-docker --no-install-recommends --no-show-upgraded --quiet --no-upgrade) \
+  ($vvalue && sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit --no-install-recommends --no-show-upgraded --no-upgrade && sudo systemctl daemon-reload && sudo systemctl restart docker \
+    && sudo apt-get install -y python3-docker --no-install-recommends --no-show-upgraded --no-upgrade) \
     || (sudo apt-get update > /dev/null && sudo apt-get install -y nvidia-container-toolkit --no-install-recommends --no-show-upgraded --quiet --no-upgrade  > /dev/null \
     && sudo systemctl daemon-reload > /dev/null && sudo systemctl restart docker > /dev/null \
     && sudo apt-get install -y python3-docker --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null )
@@ -485,7 +485,7 @@ setup_grafana_agent() {
   wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
   echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list > /dev/null
 
-  ($vvalue && sudo apt-get update && sudo apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --quiet --no-upgrade) \
+  ($vvalue && sudo apt-get update && sudo apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --no-upgrade) \
     || (sudo apt-get update > /dev/null && sudo apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
 
   if [ -f "/etc/grafana-agent.yaml" ]; then
