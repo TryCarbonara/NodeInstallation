@@ -56,6 +56,7 @@ set +e
 gvalue=false
 lvalue=false
 kvalue=false
+vvalue=false
 
 display_usage() { 
   echo "script usage: $(basename $0) [<flags>]" >&2
@@ -73,11 +74,12 @@ display_usage() {
   echo "  -r : Target Carbonara Remote Endpoint | Required" >&2
   echo "  -t : Target Carbonara Remote Port | Required" >&2
   echo "  -l : Local | Default: false" >&2
+  echo "  -v : Verbose | Default: false" >&2
   echo "  -k : Check Status | Default: false" >&2
 }
 
 parse_params() {
-  while getopts 'hn:i:u:p:r:t:d:c:ks:e:glk' OPTION; do
+  while getopts 'hn:i:u:p:r:t:d:c:ks:e:glkv' OPTION; do
     case "$OPTION" in
       h)
         display_usage
@@ -121,6 +123,9 @@ parse_params() {
         ;;
       k)
         kvalue=true
+        ;;
+      v)
+        vvalue=true
         ;;
       ?)
         display_usage
@@ -287,11 +292,11 @@ check() {
 }
 
 install_dependencies() {
-  sudo apt-get update
-  sudo apt install -y net-tools
-  sudo apt-get install -y curl tar wget
-  sudo apt install -y figlet
-  sudo apt -y upgrade && sudo apt install -y docker.io
+  ($vvalue && sudo apt-get update) || sudo apt-get update > /dev/null
+  ($vvalue && sudo apt install -y net-tools) || sudo apt install -y net-tools > /dev/null
+  ($vvalue && sudo apt-get install -y curl tar wget) || sudo apt-get install -y curl tar wget > /dev/null
+  ($vvalue && sudo apt install -y figlet) || sudo apt install -y figlet > /dev/null
+  # ($vvalue && sudo apt install -y docker.io) || sudo apt install -y docker.io > /dev/null
   # TODO: sudo useradd --system --shell /bin/false carbonara_exporter || \
   #   echo "User already exists."
   sudo mkdir -p /carbonara
@@ -308,7 +313,8 @@ setup_ipmi() {
   # check if ipmi is supported
   if ls /dev/ipmi* 1> /dev/null 2>&1; then
     echo "Installing FreeIPMI tool suite ..."
-    sudo apt-get update && sudo apt-get install freeipmi-tools -y --no-install-recommends && sudo rm -rf /var/lib/apt/lists/*
+    ($vvalue && sudo apt-get install freeipmi-tools -y --no-install-recommends --no-show-upgraded --no-upgrade) \
+      || (sudo apt-get install freeipmi-tools -y --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
 
     echo "Installing IPMI Exporter ..."
     # IPMI Exporter
@@ -327,7 +333,7 @@ setup_ipmi() {
 
     sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/ipmi-exporter/ipmi_exporter.service -o /etc/systemd/system/ipmi_exporter.service \
       && sudo mkdir -p /etc/sysconfig \
-      && sudo echo 'OPTIONS="--config.file=/carbonara/ipmi_local.yml --web.listen-address=:'$ivalue'"' | sudo tee /etc/sysconfig/ipmi_exporter > /dev/null \
+      && sudo echo 'OPTIONS="--config.file=/carbonara/ipmi_local.yml --web.listen-address='localhost:$ivalue'"' | sudo tee /etc/sysconfig/ipmi_exporter > /dev/null \
       && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/ipmi_local.yml -o /carbonara/ipmi_local.yml
 
     sudo systemctl daemon-reload \
@@ -349,15 +355,18 @@ setup_dcgm() {
     # set up the CUDA repository GPG key
     # assuming x86_64 arch
     release=$(echo "ubuntu$(lsb_release -r | awk '{print $2}' | tr -d .)")
-    sudo curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
+    ($vvalue && curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
       && sudo dpkg -i cuda-keyring_1.0-1_all.deb \
-      && sudo add-apt-repository -y "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /"
+      && sudo add-apt-repository -y "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /") \
+      || (curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb  > /dev/null \
+      && sudo dpkg -i cuda-keyring_1.0-1_all.deb > /dev/null \
+      && sudo add-apt-repository -y "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /"  > /dev/null)
 
     # install GPU Manager
-    sudo apt update && sudo apt install -y datacenter-gpu-manager \
-      && sudo systemctl enable nvidia-dcgm \
+    ($vvalue && sudo apt-get update && sudo apt install -y datacenter-gpu-manager --no-install-recommends --no-show-upgraded --no-upgrade) \
+      || (sudo apt-get update > /dev/null && sudo apt install -y datacenter-gpu-manager --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
+    sudo systemctl enable nvidia-dcgm \
       && sudo systemctl restart nvidia-dcgm
-    #  && sudo dcgmi discovery -l
 
     echo "Installing DCGM Exporter ..."
     # IPMI Exporter
@@ -370,7 +379,7 @@ setup_dcgm() {
 
     sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm_exporter.service -o /etc/systemd/system/dcgm_exporter.service \
       && sudo mkdir -p /etc/sysconfig \
-      && sudo echo 'OPTIONS="--address=:'$dvalue'"' | sudo tee /etc/sysconfig/dcgm_exporter > /dev/null \
+      && sudo echo 'OPTIONS="--address='localhost:$dvalue'"' | sudo tee /etc/sysconfig/dcgm_exporter > /dev/null \
       && sudo mkdir -p /etc/dcgm-exporter \
       && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/default-counters.csv -o /etc/dcgm-exporter/default-counters.csv \
       && sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcp-metrics-included.csv -o /etc/dcgm-exporter/dcp-metrics-included.csv
@@ -396,8 +405,10 @@ setup_dcgm() {
       echo "Backing up existing nvidia_gpu_exporter.service to '/etc/systemd/system/nvidia_gpu_exporter.service.backup'"
     fi
 
-    sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/smi-gpu-exporter/nvidia_gpu_exporter.service -o /etc/systemd/system/nvidia_gpu_exporter.service
-    sudo systemctl daemon-reload \
+    sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/smi-gpu-exporter/nvidia_gpu_exporter.service -o /etc/systemd/system/nvidia_gpu_exporter.service \
+      && sudo mkdir -p /etc/sysconfig \
+      && sudo echo 'OPTIONS="--web.listen-address='localhost:$svalue'"' | sudo tee /etc/sysconfig/nvidia_gpu_exporter > /dev/null \
+      && sudo systemctl daemon-reload \
       && sudo systemctl enable --now nvidia_gpu_exporter \
       && sudo systemctl restart nvidia_gpu_exporter
   fi
@@ -420,7 +431,7 @@ setup_node() {
 
   sudo curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.service -o /etc/systemd/system/node_exporter.service \
     && sudo mkdir -p /etc/sysconfig \
-    && sudo echo 'OPTIONS="--collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\d+$\" --collector.zfs --web.listen-address=:'$nvalue'"' | sudo tee /etc/sysconfig/node_exporter > /dev/null
+    && sudo echo 'OPTIONS="--collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\d+$\" --collector.zfs --web.listen-address='localhost:$nvalue'"' | sudo tee /etc/sysconfig/node_exporter > /dev/null
 
   sudo systemctl daemon-reload \
     && sudo systemctl restart node_exporter \
@@ -432,8 +443,11 @@ setup_cadvisor() {
   sudo apt-key add gpgkey
   distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
   curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-  sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit && sudo systemctl daemon-reload && sudo systemctl restart docker
-  sudo apt-get install -y python3-docker
+  ($vvalue && sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit --no-install-recommends --no-show-upgraded --no-upgrade && sudo systemctl daemon-reload && sudo systemctl restart docker \
+    && sudo apt-get install -y python3-docker --no-install-recommends --no-show-upgraded --no-upgrade) \
+    || (sudo apt-get update > /dev/null && sudo apt-get install -y nvidia-container-toolkit --no-install-recommends --no-show-upgraded --quiet --no-upgrade  > /dev/null \
+    && sudo systemctl daemon-reload > /dev/null && sudo systemctl restart docker > /dev/null \
+    && sudo apt-get install -y python3-docker --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null )
   
   VERSION=v0.36.0 # use the latest release version from https://github.com/google/cadvisor/releases
   sudo docker run \
@@ -471,7 +485,8 @@ setup_grafana_agent() {
   wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
   echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list > /dev/null
 
-  sudo apt-get update && sudo apt-get install -y grafana-agent
+  ($vvalue && sudo apt-get update && sudo apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --no-upgrade) \
+    || (sudo apt-get update > /dev/null && sudo apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
 
   if [ -f "/etc/grafana-agent.yaml" ]; then
     sudo cp /etc/grafana-agent.yaml /etc/grafana-agent.yaml.backup
@@ -559,7 +574,7 @@ main() {
 
     echo -e "\n"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    echo "@    **Step 4:** Install process exporter, for enabling container usage data     @"
+    echo "@    **Step 5:** Install process exporter, for enabling container usage data     @"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     setup_process
 
@@ -572,9 +587,6 @@ main() {
     else
       echo "Skipping ..."
     fi
-
-    echo -e "Cleaning not-in-use packages"
-    sudo apt -y autoremove
 
     echo -e "\n"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
