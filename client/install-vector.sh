@@ -46,5 +46,5 @@ fi
 echo "Running Carbonara script to configure exporters ..."
 sudo apt-get update \
   && sudo apt-get install -y curl tar wget \
-  && su carbonara -c "wget -q -O - https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/install_cli_ubuntu-vector.sh | bash -s -- -u 'vector' -p 'vector' -r vector.stage.trycarbonara.io/prometheus"
+  && su carbonara -c "wget -q -O - https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/install_cli_ubuntu-vector.sh | bash -s -- -u $0 -p $1 -r $2"
 sudo loginctl enable-linger carbonara

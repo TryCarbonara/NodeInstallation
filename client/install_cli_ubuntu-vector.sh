@@ -251,7 +251,7 @@ setup_gpu() {
     else
       echo "Installing DCGM Exporter ..."
       # DCGM Exporter
-      curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm-exporter -o $BIN_DIR_USER/dcgm-exporter && chmod 755 $BIN_DIR_USER/dcgm-exporter
+      curl -fsSL https://client-installables-shared.s3.us-west-1.amazonaws.com/dcgm-exporter-x86_64-3_1_7 -o $BIN_DIR_USER/dcgm-exporter && chmod 755 $BIN_DIR_USER/dcgm-exporter
 
       if [ -f "$CONFIG_DIR_USER/dcgm_exporter.service" ]; then
         cp $CONFIG_DIR_USER/dcgm_exporter.service $CONFIG_DIR_USER/dcgm_exporter.service.backup
@@ -259,7 +259,7 @@ setup_gpu() {
       fi
 
       curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm_exporter-vector.service -o $CONFIG_DIR_USER/dcgm_exporter.service \
-        && echo 'OPTIONS="--address='localhost:$dvalue'"' | tee $SYSCONFIG_DIR_USER/dcgm_exporter > /dev/null
+        && echo 'OPTIONS="--address='localhost:$dvalue' --collectors='$SYSCONFIG_DIR_USER/dcp-metrics-included.csv'"' | tee $SYSCONFIG_DIR_USER/dcgm_exporter > /dev/null
       
       curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/default-counters.csv -o $SYSCONFIG_DIR_USER/default-counters.csv \
         && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcp-metrics-included.csv -o $SYSCONFIG_DIR_USER/dcp-metrics-included.csv
@@ -319,7 +319,7 @@ setup_node() {
 
 setup_grafana_agent() {
   mkdir -p $LIB_DIR_USER/grafana-agent
-  curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/grafana-agent -o $BIN_DIR_USER/grafana-agent && chmod 755 $BIN_DIR_USER/grafana-agent
+  curl -fsSL https://client-installables-shared.s3.us-west-1.amazonaws.com/grafana-agent-x86_64-0_39_0 -o $BIN_DIR_USER/grafana-agent && chmod 755 $BIN_DIR_USER/grafana-agent
   if [ -f "$CONFIG_DIR_USER/grafana-agent.service" ]; then
     cp $CONFIG_DIR_USER/grafana-agent.service $CONFIG_DIR_USER/grafana-agent.service.backup
     echo "Backing up existing grafana-agent service unit file to '$SYSCONFIG_DIR_USERgrafana-agent.service.backup'"
