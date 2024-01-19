@@ -1,0 +1,14 @@
+[Unit]
+Description=DCGM Exporter
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/home/carbonara/.config/sysconfig/dcgm_exporter
+ExecStart=/home/carbonara/bin/dcgm-exporter $OPTIONS
+
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=default.target

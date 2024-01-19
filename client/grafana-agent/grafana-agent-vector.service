@@ -1,0 +1,18 @@
+[Unit]
+Description=Grafana-Agent Monitoring system and forwarder
+Documentation=https://grafana.com/docs/agent/latest/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Restart=always
+Environment=HOSTNAME=%H
+Environment=AGENT_DEPLOY_MODE=deb
+EnvironmentFile=/home/carbonara/.config/sysconfig/grafana-agent
+WorkingDirectory=/home/carbonara/lib/grafana-agent
+ExecStart=/home/carbonara/bin/grafana-agent --config.file $CONFIG_FILE $CUSTOM_ARGS
+TimeoutStopSec=4800s
+SendSIGKILL=no
+
+[Install]
+WantedBy=default.target

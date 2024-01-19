@@ -1,0 +1,14 @@
+[Unit]
+Description=IPMI Exporter
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/home/carbonara/.config/sysconfig/ipmi_exporter
+ExecStart=/home/carbonara/bin/ipmi_exporter $OPTIONS
+
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=default.target

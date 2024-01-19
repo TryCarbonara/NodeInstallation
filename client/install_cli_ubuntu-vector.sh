@@ -13,18 +13,13 @@
 #%
 #% OPTIONS
 #%    -h : Show usage
-#%    -g : gpu-support | Default: false
 #%    -n : node-exporter port | Default: 9100
 #%    -i : ipmi-exporter port | Default: 9290
 #%    -d : dcgm-exporter port | Default: 9400
 #%    -s : smi-gpu-exporter port | Default: 9835
-#%    -e : process-exporter port | Default: 9256
-#%    -c : cadvisor port | Default: 8080
 #%    -u : Carbonara Username | Required
 #%    -p : Carbonara Password | Required
 #%    -r : Target Carbonara Remote Endpoint | Required
-#%    -t : Target Carbonara Remote Port | Required
-#%    -l : Local | Default: false
 #%    -v : Verbose | Default: false
 #%    -k : Check Status | Default: false
 #%
@@ -53,8 +48,6 @@
 
 set +e
 
-gvalue=false
-lvalue=false
 kvalue=false
 vvalue=false
 
@@ -62,24 +55,19 @@ display_usage() {
   echo "script usage: $(basename $0) [<flags>]" >&2
   echo "Flags:" >&2
   echo "  -h : Show usage" >&2
-  echo "  -g : gpu-support | Default: false" >&2
   echo "  -n : node-exporter port | Default: 9100" >&2
   echo "  -i : ipmi-exporter port | Default: 9290" >&2
   echo "  -d : dcgm-exporter port | Default: 9400" >&2
   echo "  -s : smi-gpu-exporter port | Default: 9835" >&2
-  echo "  -e : process-exporter port | Default: 9256" >&2
-  echo "  -c : cadvisor port | Default: 8080" >&2
   echo "  -u : Carbonara Username | Required" >&2
   echo "  -p : Carbonara Password | Required" >&2
   echo "  -r : Target Carbonara Remote Endpoint | Required" >&2
-  echo "  -t : Target Carbonara Remote Port | Required" >&2
-  echo "  -l : Local | Default: false" >&2
   echo "  -v : Verbose | Default: false" >&2
   echo "  -k : Check Status | Default: false" >&2
 }
 
 parse_params() {
-  while getopts 'hn:i:u:p:r:t:d:c:ks:e:glkv' OPTION; do
+  while getopts 'hn:i:u:p:r:t:d:ks:kv' OPTION; do
     case "$OPTION" in
       h)
         display_usage
@@ -100,23 +88,8 @@ parse_params() {
       r)
         rvalue="$OPTARG"
         ;;
-      t)
-        tvalue="$OPTARG"
-        ;;
-      g)
-        gvalue=true
-        ;;
-      l)
-        lvalue=true
-        ;;
       d)
         dvalue="$OPTARG"
-        ;;
-      e)
-        evalue="$OPTARG"
-        ;;
-      c)
-        cvalue="$OPTARG"
         ;;
       s)
         svalue="$OPTARG"
@@ -145,25 +118,14 @@ parse_params() {
     ivalue=9290
   fi
 
-  if [ -z "$cvalue" ] ; then
-    echo -e "cadvisor-exporter port is picking default value: 8080."
-    cvalue=8080
+  if [ -z "$dvalue" ] ; then
+    echo -e "dcgm-exporter port is picking default value: 9400."
+    dvalue=9400
   fi
 
-  if [ -z "$evalue" ] ; then
-    echo -e "process-exporter port is picking default value: 9256."
-    evalue=9256
-  fi
-
-  if [ "$gvalue" == true ] ; then
-    if [ -z "$dvalue" ] ; then
-      echo -e "dcgm-exporter port is picking default value: 9400."
-      dvalue=9400
-    fi
-    if [ -z "$svalue" ] ; then
-      echo -e "smi-gpu-exporter port is picking default value: 9835."
-      svalue=9835
-    fi
+  if [ -z "$svalue" ] ; then
+    echo -e "smi-gpu-exporter port is picking default value: 9835."
+    svalue=9835
   fi
 }
 
@@ -192,23 +154,21 @@ check() {
     echo "IPMI Exporter ... Not Supported"
   fi
 
-  if [ "$gvalue" == true ] ; then
-    echo -n "Checking port (smi-gpu-exporter) ..."
-    s_inuse=$((echo >/dev/tcp/localhost/$svalue) &>/dev/null && echo "open" || echo "close")
-    if [ "$s_inuse" == "open" ] ; then
-      echo " Port in use" >&2
-      if [ "$with_exit" == true ] ; then
-        exit 1
-      fi
-    else
-      echo " Port not in use" >&2
+  echo -n "Checking port (smi-gpu-exporter) ..."
+  s_inuse=$((echo >/dev/tcp/localhost/$svalue) &>/dev/null && echo "open" || echo "close")
+  if [ "$s_inuse" == "open" ] ; then
+    echo " Port in use" >&2
+    if [ "$with_exit" == true ] ; then
+      exit 1
     fi
-    sd=$(systemctl status nvidia_gpu_exporter)
-    if [ $? == 0 ]; then
-      echo "SMI GPU Exporter ... Succeeded"
-    else
-      echo "SMI GPU Exporter ... Failed"
-    fi
+  else
+    echo " Port not in use" >&2
+  fi
+  sd=$(systemctl status nvidia_gpu_exporter)
+  if [ $? == 0 ]; then
+    echo "SMI GPU Exporter ... Succeeded"
+  else
+    echo "SMI GPU Exporter ... Failed"
   fi
 
   echo -n "Checking port (node-exporter) ..."
@@ -228,44 +188,6 @@ check() {
     echo "Node Exporter ... Failed"
   fi
 
-  echo -n "Checking port (cadvisor-exporter) ..."
-  c_inuse=$((echo >/dev/tcp/localhost/$cvalue) &>/dev/null && echo "open" || echo "close")
-  if [ "$c_inuse" == "open" ] ; then
-    echo " Port in use" >&2
-    if [ "$with_exit" == true ] ; then
-      exit 1
-    fi
-  else
-    echo " Port not is use" >&2
-  fi
-  CONTAINER_NAME='cadvisor'
-  CID=$(docker ps -q -f status=running -f name=^/${CONTAINER_NAME}$)
-  if [ ! "${CID}" ]; then
-    echo "Cadvisor Exporter ... Failed"
-  else
-    echo "Cadvisor Exporter ... Succeeded"
-  fi
-  unset CID
-
-  echo -n "Checking port (process-exporter) ..."
-  e_inuse=$((echo >/dev/tcp/localhost/$evalue) &>/dev/null && echo "open" || echo "close")
-  if [ "$e_inuse" == "open" ] ; then
-    echo " Port in use" >&2
-    if [ "$with_exit" == true ] ; then
-      exit 1
-    fi
-  else
-    echo " Port not is use" >&2
-  fi
-  CONTAINER_NAME='process_exporter'
-  CID=$(docker ps -q -f status=running -f name=^/${CONTAINER_NAME}$)
-  if [ ! "${CID}" ]; then
-    echo "Process Exporter ... Failed"
-  else
-    echo "Process Exporter ... Succeeded"
-  fi
-  unset CID
-
   sd=$(systemctl status grafana-agent.service)
   if [ $? == 0 ]; then
     echo "Grafana Agent ... Succeeded"
@@ -274,59 +196,51 @@ check() {
   fi
 }
 
-install_dependencies() {
-  ($vvalue && apt-get update) || apt-get update > /dev/null
-  ($vvalue && apt install -y net-tools) || apt install -y net-tools > /dev/null
-  ($vvalue && apt-get install -y curl tar wget) || apt-get install -y curl tar wget > /dev/null
-  # ($vvalue && apt install -y docker.io) || apt install -y docker.io > /dev/null
-  mkdir -p /carbonara
-  chmod 777 -R /carbonara/
-  cd /carbonara
+setup_workdir() {
+  CONFIG_DIR_USER=~/.config/systemd/user
+  SYSCONFIG_DIR_USER=~/.config/sysconfig
+  BIN_DIR_USER=~/bin
+  LIB_DIR_USER=~/lib
+  WORK_DIR=~/carbonara
+  mkdir -p $CONFIG_DIR_USER
+  mkdir -p $SYSCONFIG_DIR_USER
+  mkdir -p $BIN_DIR_USER
+  mkdir -p $WORK_DIR
+  mkdir -p $LIB_DIR_USER
+  cd $WORK_DIR
 }
 
 setup_ipmi() {
-  # FreeIPMI
-  # enable ipmi if underlying h/w & kernel supports it
-  modprobe ipmi_devintf || true
-  modprobe ipmi_si || true
-
   # check if ipmi is supported
   if ls /dev/ipmi* 1> /dev/null 2>&1; then
-    echo "Installing FreeIPMI tool suite ..."
-    ($vvalue && apt-get install freeipmi-tools -y --no-install-recommends --no-show-upgraded --no-upgrade) \
-      || (apt-get install freeipmi-tools -y --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
-
     echo "Installing IPMI Exporter ..."
     # IPMI Exporter
     curl -fsSL https://github.com/prometheus-community/ipmi_exporter/releases/download/v1.6.1/ipmi_exporter-1.6.1.linux-amd64.tar.gz \
-    | tar -zxvf - -C /usr/local/bin --strip-components=1 ipmi_exporter-1.6.1.linux-amd64/ipmi_exporter \
-    && chown root:root /usr/local/bin/ipmi_exporter
+    | tar -zxvf - -C $BIN_DIR_USER --strip-components=1 ipmi_exporter-1.6.1.linux-amd64/ipmi_exporter \
+    && chown carbonara:carbonara $BIN_DIR_USER/ipmi_exporter
 
-    if [ -f "/etc/systemd/system/ipmi_exporter.service" ]; then
-      cp /etc/systemd/system/ipmi_exporter.service /etc/systemd/system/ipmi_exporter.service.backup
-      echo "Backing up existing ipmi_exporter.service to '/etc/systemd/system/ipmi_exporter.service.backup'"
+    if [ -f "$CONFIG_DIR_USER/ipmi_exporter.service" ]; then
+      cp $CONFIG_DIR_USER/ipmi_exporter.service $CONFIG_DIR_USER/.service.backup
+      echo "Backing up existing ipmi_exporter.service to '$CONFIG_DIR_USER/.service.backup'"
     fi
-    if [ -f "/etc/sysconfig/ipmi_exporter" ]; then
-      cp /etc/sysconfig/ipmi_exporter /etc/sysconfig/ipmi_exporter.backup
-      echo "Backing up existing ipmi_exporter sysconfig to '/etc/sysconfig/ipmi_exporter.backup'"
+    if [ -f "$SYSCONFIG_DIR_USER/ipmi_exporter" ]; then
+      cp  $SYSCONFIG_DIR_USER/ipmi_exporter $SYSCONFIG_DIR_USER/ipmi_exporter.backup
+      echo "Backing up existing ipmi_exporter sysconfig to '$SYSCONFIG_DIR_USER/ipmi_exporter.backup'"
     fi
 
-    curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/ipmi-exporter/ipmi_exporter.service -o /etc/systemd/system/ipmi_exporter.service \
-      && mkdir -p /etc/sysconfig \
-      && echo 'OPTIONS="--config.file=/carbonara/ipmi_local.yml --web.listen-address='localhost:$ivalue'"' | tee /etc/sysconfig/ipmi_exporter > /dev/null \
-      && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/ipmi_local.yml -o /carbonara/ipmi_local.yml
-
-    systemctl daemon-reload \
-      && systemctl restart ipmi_exporter \
-      && systemctl enable ipmi_exporter
+    curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/ipmi-exporter/ipmi_exporter-vector.service -o $CONFIG_DIR_USER/ipmi_exporter.service \
+      && echo 'OPTIONS="--config.file=$WORK_DIR/ipmi_local.yml --web.listen-address='localhost:$ivalue'"' | tee $SYSCONFIG_DIR_USER/ipmi_exporter > /dev/null \
+      && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/ipmi_local.yml -o $WORK_DIR/ipmi_local.yml
+    
+    systemctl --user daemon-reload \
+      && systemctl --user restart ipmi_exporter \
+      && systemctl --user enable ipmi_exporter
   else
-    echo "IPMI is not available."
-    echo "Enabling RAPL module instead, for supported Architecture"
-    modprobe intel_rapl_common || true
+    echo "Skipping ... IPMI is not supported."
   fi
 }
 
-setup_dcgm() {
+setup_gpu() {
   echo "Current VGA devices:"
   lspci | grep -E 'VGA|Display ' | cut -d" " -f 1 | xargs -i lspci -v -s {}
 
@@ -335,43 +249,24 @@ setup_dcgm() {
     if [ $? == 0 ]; then
       echo "Skipping DCGM GPU Manager ..."
     else
-      echo "Installing DCGM GPU Manager ..."
-      # set up the CUDA repository GPG key
-      # assuming x86_64 arch
-      release=$(echo "ubuntu$(lsb_release -r | awk '{print $2}' | tr -d .)")
-      ($vvalue && curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb \
-        && dpkg -i cuda-keyring_1.0-1_all.deb \
-        && add-apt-repository -y "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /") \
-        || (curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/cuda-keyring_1.0-1_all.deb -o cuda-keyring_1.0-1_all.deb  > /dev/null \
-        && dpkg -i cuda-keyring_1.0-1_all.deb > /dev/null \
-        && add-apt-repository -y "deb https://developer.download.nvidia.com/compute/cuda/repos/$release/x86_64/ /"  > /dev/null)
-
-      # install GPU Manager
-      ($vvalue && apt-get update && apt install -y datacenter-gpu-manager --no-install-recommends --no-show-upgraded --no-upgrade) \
-        || (apt-get update > /dev/null && apt install -y datacenter-gpu-manager --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
-      systemctl enable nvidia-dcgm \
-        && systemctl restart nvidia-dcgm
-
       echo "Installing DCGM Exporter ..."
-      # IPMI Exporter
-      curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm-exporter -o /usr/bin/dcgm-exporter && chmod 755 /usr/bin/dcgm-exporter
+      # DCGM Exporter
+      curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm-exporter -o $BIN_DIR_USER/dcgm-exporter && chmod 755 $BIN_DIR_USER/dcgm-exporter
 
-      if [ -f "/etc/systemd/system/dcgm_exporter.service" ]; then
-        cp /etc/systemd/system/dcgm_exporter.service /etc/systemd/system/dcgm_exporter.service.backup
-        echo "Backing up existing dcgm_exporter.service to '/etc/systemd/system/dcgm_exporter.service.backup'"
+      if [ -f "$CONFIG_DIR_USER/dcgm_exporter.service" ]; then
+        cp $CONFIG_DIR_USER/dcgm_exporter.service $CONFIG_DIR_USER/dcgm_exporter.service.backup
+        echo "Backing up existing dcgm_exporter.service to '$CONFIG_DIR_USER/dcgm_exporter.service.backup'"
       fi
 
-      curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm_exporter.service -o /etc/systemd/system/dcgm_exporter.service \
-        && mkdir -p /etc/sysconfig \
-        && echo 'OPTIONS="--address='localhost:$dvalue'"' | tee /etc/sysconfig/dcgm_exporter > /dev/null \
-        && mkdir -p /etc/dcgm-exporter \
-        && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/default-counters.csv -o /etc/dcgm-exporter/default-counters.csv \
-        && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcp-metrics-included.csv -o /etc/dcgm-exporter/dcp-metrics-included.csv
-
-      systemctl daemon-reload \
-        && systemctl restart dcgm_exporter \
-        && systemctl enable dcgm_exporter
-    
+      curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcgm_exporter-vector.service -o $CONFIG_DIR_USER/dcgm_exporter.service \
+        && echo 'OPTIONS="--address='localhost:$dvalue'"' | tee $SYSCONFIG_DIR_USER/dcgm_exporter > /dev/null
+      
+      curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/default-counters.csv -o $SYSCONFIG_DIR_USER/default-counters.csv \
+        && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/dcgm-exporter/dcp-metrics-included.csv -o $SYSCONFIG_DIR_USER/dcp-metrics-included.csv
+      
+      systemctl --user daemon-reload \
+        && systemctl --user restart dcgm_exporter \
+        && systemctl --user enable dcgm_exporter
     fi
 
     echo -e "\n"
@@ -381,129 +276,81 @@ setup_dcgm() {
 
     echo "Installing NVIDIA-SMI GPU Manager ..."
     VERSION=1.1.0
-    wget https://github.com/utkuozdemir/nvidia_gpu_exporter/releases/download/v${VERSION}/nvidia_gpu_exporter_${VERSION}_linux_x86_64.tar.gz
-    tar -xvzf nvidia_gpu_exporter_${VERSION}_linux_x86_64.tar.gz
-    mv nvidia_gpu_exporter /usr/bin
+    curl -fsSL https://github.com/utkuozdemir/nvidia_gpu_exporter/releases/download/v${VERSION}/nvidia_gpu_exporter_${VERSION}_linux_x86_64.tar.gz -o $WORK_DIR/nvidia_gpu_exporter_${VERSION}_linux_x86_64.tar.gz
+    tar -xvzf $WORK_DIR/nvidia_gpu_exporter_${VERSION}_linux_x86_64.tar.gz && mv $WORK_DIR/nvidia_gpu_exporter $BIN_DIR_USER/nvidia_gpu_exporter && chmod 755 $BIN_DIR_USER/nvidia_gpu_exporter
     # nvidia_gpu_exporter --help
 
-    if [ -f "/etc/systemd/system/nvidia_gpu_exporter.service" ]; then
-      cp /etc/systemd/system/nvidia_gpu_exporter.service /etc/systemd/system/nvidia_gpu_exporter.service.backup
-      echo "Backing up existing nvidia_gpu_exporter.service to '/etc/systemd/system/nvidia_gpu_exporter.service.backup'"
+    if [ -f "$CONFIG_DIR_USER/nvidia_gpu_exporter.service" ]; then
+      cp $CONFIG_DIR_USER/nvidia_gpu_exporter.service $CONFIG_DIR_USER/nvidia_gpu_exporter.service.backup
+      echo "Backing up existing nvidia_gpu_exporter.service to '$CONFIG_DIR_USER/nvidia_gpu_exporter.service.backup'"
     fi
 
-    curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/smi-gpu-exporter/nvidia_gpu_exporter.service -o /etc/systemd/system/nvidia_gpu_exporter.service \
-      && mkdir -p /etc/sysconfig \
-      && echo 'OPTIONS="--web.listen-address='localhost:$svalue'"' | tee /etc/sysconfig/nvidia_gpu_exporter > /dev/null \
-      && systemctl daemon-reload \
-      && systemctl enable --now nvidia_gpu_exporter \
-      && systemctl restart nvidia_gpu_exporter
+    curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/smi-gpu-exporter/nvidia_gpu_exporter-vector.service -o $CONFIG_DIR_USER/nvidia_gpu_exporter.service \
+      && echo 'OPTIONS="--web.listen-address='localhost:$svalue'"' | tee $SYSCONFIG_DIR_USER/nvidia_gpu_exporter > /dev/null
+
+    systemctl --user daemon-reload \
+        && systemctl --user restart nvidia_gpu_exporter \
+        && systemctl --user enable nvidia_gpu_exporter
   fi
 }
 
 setup_node() {
   echo "Installing Node Exporter ..."
   curl -fsSL https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-amd64.tar.gz \
-    | tar -zxvf - -C /usr/local/bin --strip-components=1 node_exporter-1.3.1.linux-amd64/node_exporter \
-    && chown root:root /usr/local/bin/node_exporter
+    | tar -zxvf - -C $BIN_DIR_USER --strip-components=1 node_exporter-1.3.1.linux-amd64/node_exporter \
+    && chown carbonara:carbonara $BIN_DIR_USER/node_exporter
 
-  if [ -f "/etc/systemd/system/node_exporter.service" ]; then
-    cp /etc/systemd/system/node_exporter.service /etc/systemd/system/node_exporter.service.backup
-    echo "Backing up existing node_exporter.service to '/etc/systemd/system/node_exporter.service.backup'"
+  if [ -f "$CONFIG_DIR_USER/node_exporter.service" ]; then
+    cp $CONFIG_DIR_USER/node_exporter.service $CONFIG_DIR_USER/node_exporter.service.backup
+    echo "Backing up existing node_exporter.service to '$CONFIG_DIR_USER/node_exporter.service.backup'"
   fi
-  if [ -f "/etc/sysconfig/node_exporter" ]; then
-    cp /etc/sysconfig/node_exporter /etc/sysconfig/node_exporter.backup
-    echo "Backing up existing node_exporter sysconfig to '/etc/sysconfig/node_exporter.backup'"
+  if [ -f "$SYSCONFIG_DIR_USER/node_exporter" ]; then
+    cp $SYSCONFIG_DIR_USER/node_exporter $SYSCONFIG_DIR_USER/node_exporter.backup
+    echo "Backing up existing node_exporter sysconfig to '$SYSCONFIG_DIR_USER/node_exporter.backup'"
   fi
 
-  curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.service -o /etc/systemd/system/node_exporter.service \
-    && mkdir -p /etc/sysconfig \
-    && echo 'OPTIONS="--collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\d+$\" --collector.zfs --web.listen-address='localhost:$nvalue'"' | tee /etc/sysconfig/node_exporter > /dev/null
-
-  systemctl daemon-reload \
-    && systemctl restart node_exporter \
-    && systemctl enable node_exporter
-}
-
-setup_cadvisor() {
-  wget https://nvidia.github.io/nvidia-docker/gpgkey --no-check-certificate
-  apt-key add gpgkey
-  distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-  curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | tee /etc/apt/sources.list.d/nvidia-docker.list
-  ($vvalue && apt-get update && apt-get install -y nvidia-container-toolkit --no-install-recommends --no-show-upgraded --no-upgrade && systemctl daemon-reload && systemctl restart docker \
-    && apt-get install -y python3-docker --no-install-recommends --no-show-upgraded --no-upgrade) \
-    || (apt-get update > /dev/null && apt-get install -y nvidia-container-toolkit --no-install-recommends --no-show-upgraded --quiet --no-upgrade  > /dev/null \
-    && systemctl daemon-reload > /dev/null && systemctl restart docker > /dev/null \
-    && apt-get install -y python3-docker --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null )
+  curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter-vector.service -o $CONFIG_DIR_USER/node_exporter.service \
+    && echo 'OPTIONS="--collector.uname --collector.processes --collector.systemd --collector.tcpstat --collector.cpu.info --collector.rapl --collector.systemd.enable-task-metrics --web.disable-exporter-metrics --collector.diskstats.ignored-devices=\"^(ram|loop|fd|nfs)\\d+$\" --collector.zfs --web.listen-address='localhost:$nvalue'"' | tee $SYSCONFIG_DIR_USER/node_exporter > /dev/null
   
-  VERSION=v0.36.0 # use the latest release version from https://github.com/google/cadvisor/releases
-  docker run \
-    --volume=/:/rootfs:ro \
-    --volume=/var/run:/var/run:ro \
-    --volume=/sys:/sys:ro \
-    --volume=/var/lib/docker/:/var/lib/docker:ro \
-    --volume=/dev/disk/:/dev/disk:ro \
-    --publish=$cvalue:8080 \
-    --detach=true \
-    --name=cadvisor \
-    --privileged \
-    --device=/dev/kmsg \
-    --restart=always \
-    gcr.io/cadvisor/cadvisor:$VERSION
-}
-
-setup_process() {
-  mkdir -p /carbonara/process_config \
-      && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/process.yml -o /carbonara/process_config/process.yml
-
-  docker run \
-    --publish=$evalue:9256 \
-    --privileged \
-    --detach=true \
-    --volume=/proc:/host/proc \
-    --volume=/carbonara/process_config:/config \
-    --restart=always \
-    --name=process_exporter \
-    ncabatoff/process-exporter --procfs /host/proc -config.path /config/process.yml
+  systemctl --user daemon-reload \
+    && systemctl --user restart node_exporter \
+    && systemctl --user enable node_exporter
 }
 
 setup_grafana_agent() {
-  mkdir -p /etc/apt/keyrings/
-  wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/grafana.gpg > /dev/null
-  echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | tee /etc/apt/sources.list.d/grafana.list > /dev/null
-
-  ($vvalue && apt-get update && apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --no-upgrade) \
-    || (apt-get update > /dev/null && apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
-
-  if [ -f "/etc/grafana-agent.yaml" ]; then
-    cp /etc/grafana-agent.yaml /etc/grafana-agent.yaml.backup
-    echo "Backing up existing grafana-agent config file to '/etc/grafana-agent.yaml.backup'"
+  mkdir -p $LIB_DIR_USER/grafana-agent
+  curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/grafana-agent -o $BIN_DIR_USER/grafana-agent && chmod 755 $BIN_DIR_USER/grafana-agent
+  if [ -f "$CONFIG_DIR_USER/grafana-agent.service" ]; then
+    cp $CONFIG_DIR_USER/grafana-agent.service $CONFIG_DIR_USER/grafana-agent.service.backup
+    echo "Backing up existing grafana-agent service unit file to '$SYSCONFIG_DIR_USERgrafana-agent.service.backup'"
   fi
-  if [ -f "/etc/default/grafana-agent" ]; then
-    cp /etc/default/grafana-agent /etc/default/grafana-agent.backup
-    echo "Backing up existing grafana-agent sysconfig to '/etc/default/grafana-agent.backup'"
+  if [ -f "$SYSCONFIG_DIR_USER/grafana-agent.yaml" ]; then
+    cp $SYSCONFIG_DIR_USER/grafana-agent.yaml $SYSCONFIG_DIR_USER/grafana-agent.yaml.backup
+    echo "Backing up existing grafana-agent config yaml file to '$SYSCONFIG_DIR_USER/grafana-agent.yaml.backup'"
+  fi
+  if [ -f "$SYSCONFIG_DIR_USER/grafana-agent" ]; then
+    cp $SYSCONFIG_DIR_USER/grafana-agent $SYSCONFIG_DIR_USER/grafana-agent.backup
+    echo "Backing up existing grafana-agent sysconfig to '$SYSCONFIG_DIR_USER/grafana-agent.backup'"
   fi
 
-  curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client.yaml -o /etc/grafana-agent.yaml && \
-  curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/sysconfig.grafana_agent -o /etc/default/grafana-agent
+  curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/grafana-agent-vector.service -o $CONFIG_DIR_USER/grafana-agent.service \
+    && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client-vector.yaml -o $SYSCONFIG_DIR_USER/grafana-agent.yaml \
+    && curl -fsSL https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/sysconfig.grafana_agent-vector -o $SYSCONFIG_DIR_USER/grafana-agent
 
   ip_addr=$(curl -s ifconfig.me || hostname -I | cut -f1 -d' ')
-  echo "INSTANCE=$ip_addr" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "PROVIDER=$uvalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "HOSTNAME=$(hostname)" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "REMOTE_ENDPOINT=$rvalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "REMOTE_PORT=$tvalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "AUTH_UNAME=$uvalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "AUTH_PWD=$pvalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "NODE_PORT=$nvalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "IPMI_PORT=$ivalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "DCGM_PORT=$dvalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "CADVISOR_PORT=$cvalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "SMI_PORT=$svalue" | tee -a /etc/default/grafana-agent > /dev/null
-  echo "PROCESS_PORT=$evalue" | tee -a /etc/default/grafana-agent > /dev/null
-
-  systemctl daemon-reload \
-    && systemctl restart grafana-agent \
-    && systemctl enable grafana-agent
+  echo "INSTANCE=$ip_addr" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "PROVIDER=vector" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "HOSTNAME=$(hostname)" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "REMOTE_ENDPOINT=vector.stage.trycarbonara.io/prometheus" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "AUTH_UNAME=vector" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "AUTH_PWD=vector" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "NODE_PORT=9100" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "IPMI_PORT=9290" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "DCGM_PORT=9400" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "SMI_PORT=9835" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  systemctl --user daemon-reload \
+    && systemctl --user restart grafana-agent \
+    && systemctl --user enable grafana-agent
 }
 
 main() {
@@ -516,7 +363,7 @@ main() {
       exit 1
     fi
 
-    if [ -z "$rvalue" ] || [ -z "$tvalue" ] ; then
+    if [ -z "$rvalue" ] ; then
       echo "Carbonara service endpoint and port is required. Use '-h' flag to learn more." >&2
       exit 1
     fi
@@ -525,10 +372,10 @@ main() {
     check true
 
     echo -e "\n"
-    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    echo "@  **Step 0:** Installing pre-requisites for supporting Carbonara Setup and Setting Carbonara Working Directory as '/carbonara'  @"
-    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    install_dependencies
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    echo "@  **Step 0:** Setting Carbonara Working Directory as '$WORK_DIR'   @"
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    setup_workdir
 
     echo -e "\n"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
@@ -536,15 +383,11 @@ main() {
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     setup_ipmi
 
-    if [ "$gvalue" == true ] ; then
-      echo -e "\n"
-      echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-      echo '@ **Step 2:** Install DCGM exporter tool, for host **GPU (Nvidia)** power consumption data  @'
-      echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-      setup_dcgm
-    else
-      echo "Skipping GPU ..."
-    fi
+    echo -e "\n"
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    echo '@ **Step 2:** Install DCGM exporter tool, for host **GPU (Nvidia)** power consumption data  @'
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    setup_gpu
 
     echo -e "\n"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
@@ -553,32 +396,17 @@ main() {
     setup_node
 
     echo -e "\n"
-    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    echo "@    **Step 4:** Install cAvisor exporter, for enabling container usage data     @"
-    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    setup_cadvisor
-
-    echo -e "\n"
-    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    echo "@    **Step 5:** Install process exporter, for enabling container usage data     @"
-    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    setup_process
-
-    echo -e "\n"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    echo "@     **Step 6:** Install Grafana Agent, for enabling metrics push      @"
+    echo "@     **Step 4:** Install Grafana Agent, for enabling metrics push      @"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    if [ $lvalue == false ] ; then
-      setup_grafana_agent
-    else
-      echo "Skipping ..."
-    fi
+    setup_grafana_agent
 
+    export PATH="$HOME/.local/bin:$PATH"
     echo -e "\n"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     echo "@            You are all set to start publishing metrics to Carbonara             @"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    echo -e "Please make sure to whitelist (egress) endpoint=$rvalue:$tvalue, if applicable."
+    echo -e "Please make sure to whitelist (egress) endpoint=$rvalue:443, if applicable."
     echo Happy Carbonara !!
   fi
 }

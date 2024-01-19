@@ -1,0 +1,16 @@
+[Unit]
+Description=Nvidia GPU Exporter
+After=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/home/carbonara/.config/sysconfig/nvidia_gpu_exporter
+ExecStart=/home/carbonara/bin/nvidia_gpu_exporter $OPTIONS
+
+SyslogIdentifier=nvidia_gpu_exporter
+
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=default.target

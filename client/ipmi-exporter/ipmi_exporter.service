@@ -11,4 +11,3 @@ ExecStart=/usr/local/bin/ipmi_exporter $OPTIONS
 
 [Install]
 WantedBy=multi-user.target
-                                                                                                                                                                                                                                                                                                                                                                
