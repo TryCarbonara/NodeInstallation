@@ -4,6 +4,7 @@
 echo "Setting up carbonara user to setup exporters (requires sudo access) ..."
 sudo useradd -m carbonara || true
 # set password, in case need to ssh directly
+# sudo passwd carbonara
 
 # [sudo] pre-requisite:
 # # installing free-ipmi
@@ -47,4 +48,5 @@ echo "Running Carbonara script to configure exporters ..."
 sudo apt-get update \
   && sudo apt-get install -y curl tar wget \
   && su carbonara -c "wget -q -O - https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/install_cli_ubuntu-vector.sh | bash -s -- -u $0 -p $1 -r $2"
+# enable service lingering for user
 sudo loginctl enable-linger carbonara
