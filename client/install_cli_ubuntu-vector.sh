@@ -348,6 +348,7 @@ setup_grafana_agent() {
   echo "IPMI_PORT=9290" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
   echo "DCGM_PORT=9400" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
   echo "SMI_PORT=9835" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
+  echo "INFRA_TYPE=linuxmetal" | tee -a $SYSCONFIG_DIR_USER/grafana-agent > /dev/null
   systemctl --user daemon-reload \
     && systemctl --user restart grafana-agent \
     && systemctl --user enable grafana-agent

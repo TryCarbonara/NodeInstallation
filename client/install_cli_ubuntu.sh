@@ -486,8 +486,8 @@ setup_grafana_agent() {
   wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
   echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list > /dev/null
 
-  ($vvalue && sudo apt-get update && sudo apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --no-upgrade) \
-    || (sudo apt-get update > /dev/null && sudo apt-get install -y grafana-agent --no-install-recommends --no-show-upgraded --quiet --no-upgrade > /dev/null)
+  ($vvalue && sudo apt-get update && sudo apt-get install -y grafana-agent --no-upgrade) \
+    || (sudo apt-get update > /dev/null && sudo apt-get install -y grafana-agent --quiet --no-upgrade > /dev/null)
 
   if [ -f "/etc/grafana-agent.yaml" ]; then
     sudo cp /etc/grafana-agent.yaml /etc/grafana-agent.yaml.backup
