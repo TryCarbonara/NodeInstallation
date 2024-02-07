@@ -190,6 +190,7 @@ sed -i -e "s/\${AUTH_UNAME}/$uvalue/g" /etc/grafana-agent.yaml
 sed -i -e "s/\${AUTH_PWD}/$pvalue/g" /etc/grafana-agent.yaml
 sed -i -e "s/\${NODE_PORT}/$nvalue/g" /etc/grafana-agent.yaml
 sed -i -e "s/\${IPMI_PORT}/$ivalue/g" /etc/grafana-agent.yaml
+sed -i -e "s/\${INFRA_TYPE}/linuxmetal/g" /etc/grafana-agent.yaml
 
 chmod +x /usr/local/etc/rc.d/grafana_agent \
   && sysrc grafana_agent_enable=YES \
