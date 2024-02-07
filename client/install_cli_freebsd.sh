@@ -164,7 +164,7 @@ fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/clien
   && fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/ipmi_local.yml -o /carbonara/ipmi_local.yml \
   && sysrc ipmi_exporter_enable=YES \
   && sysrc ipmi_exporter_config_file="/carbonara/ipmi_local.yml" \
-  && sysrc ipmi_exporter_listen_address="localhost:$ivalue"" \
+  && sysrc ipmi_exporter_listen_address="localhost:$ivalue" \
   && chmod +x /usr/local/etc/rc.d/ipmi_exporter \
   && service ipmi_exporter restart
 
