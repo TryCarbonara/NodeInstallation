@@ -181,7 +181,7 @@ fetch https://github.com/grafana/agent/releases/download/v0.36.2/grafana-agent-f
 
 fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/grafana_agent.rc.d -o /usr/local/etc/rc.d/grafana_agent \
   && fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/grafana-agent/agent-client-https.yaml -o /etc/grafana-agent.yaml
-set ip_addr=`curl -s ifconfig.me`
+ip_addr=$(curl -s ifconfig.me)
 sed -i -e "s/\${INSTANCE}/$ip_addr/g" /etc/grafana-agent.yaml
 sed -i -e "s/\${PROVIDER}/$uvalue/g" /etc/grafana-agent.yaml
 sed -i -e "s/\${HOSTNAME}/$(hostname)/g" /etc/grafana-agent.yaml
