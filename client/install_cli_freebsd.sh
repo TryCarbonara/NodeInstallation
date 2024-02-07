@@ -142,7 +142,7 @@ pkg update -f && pkg install -y node_exporter
 #   && service node_exporter restart
 sysrc node_exporter_enable=YES \
   && sysrc node_exporter_args="--collector.meminfo --collector.uname --collector.cpu --web.disable-exporter-metrics" \
-  && sysrc node_exporter_listen_address="localhost:9190" \
+  && sysrc node_exporter_listen_address="localhost:$nvalue" \
   && service node_exporter restart
 
 # FreeIPMI
@@ -164,7 +164,7 @@ fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/clien
   && fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/ipmi_local.yml -o /carbonara/ipmi_local.yml \
   && sysrc ipmi_exporter_enable=YES \
   && sysrc ipmi_exporter_config_file="/carbonara/ipmi_local.yml" \
-  && sysrc ipmi_exporter_listen_address="localhost:9290" \
+  && sysrc ipmi_exporter_listen_address="localhost:$ivalue"" \
   && chmod +x /usr/local/etc/rc.d/ipmi_exporter \
   && service ipmi_exporter restart
 
