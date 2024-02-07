@@ -138,6 +138,7 @@ docker run -d --rm \
    --gpus all \
    --net host \
    --cap-add SYS_ADMIN \
+   -p 9400:9400 \
    nvcr.io/nvidia/k8s/dcgm-exporter:${DCGM_EXPORTER_VERSION}-ubuntu20.04 \
    -f /etc/dcgm-exporter/dcp-metrics-included.csv
 ```

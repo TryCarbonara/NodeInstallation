@@ -366,6 +366,8 @@ else
       echo "Installing Nvidia Driver ..."
       sudo apt-get update && sudo apt-get install -y ubuntu-drivers-common && sudo ubuntu-drivers devices \
         && sudo apt-get install -y nvidia-driver-535
+      sudo apt-get install -y nvidia-container-toolkit
+      sudo systemctl daemon-reload && sudo systemctl restart docker
         # && sudo ubuntu-drivers autoinstall
     fi
 
