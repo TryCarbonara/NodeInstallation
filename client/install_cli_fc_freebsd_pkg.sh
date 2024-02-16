@@ -132,12 +132,6 @@ echo '@   Install node exporter tool, for host resource usage data   @'
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "Installing Node Exporter ..."
 pkg update -f && pkg install -y node_exporter
-# sed -i .backup 's/node_exporter_args:=""/node_exporter_args:="--collector.uname --collector.meminfo --collector.cpu --web.disable-exporter-metrics"/g' /usr/local/etc/rc.d/node_exporter
-# fetch https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.openbsd-amd64.tar.gz \
-#   | tar -xzvf - -C /usr/local/bin --strip-components=1 node_exporter-1.6.1.openbsd-amd64/node_exporter \
-#   && chown root:wheel /usr/local/bin/node_exporter
-# fetch https://raw.githubusercontent.com/TryCarbonara/NodeInstallation/main/client/node-exporter/node_exporter.rc.d -o /usr/local/etc/rc.d/node_exporter \
-#   && chmod +x /usr/local/etc/rc.d/node_exporter \
 sysrc node_exporter_enable=YES \
   && sysrc node_exporter_args="--web.disable-exporter-metrics" \
   && service node_exporter restart
